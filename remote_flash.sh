@@ -48,7 +48,8 @@ nand_part_detect () {
   # TODO: Make the escaping less yucky...
   KERNEL_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Kernel\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   RFS_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"RFS\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
-  echo "Detected Kernel partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION"
+  Bulk_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Bulk\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
+  echo "Detected Kernel partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION Bulk Partition=$Bulk_PARTITION"
 }
 
 nand_flash_kernel () {
@@ -59,35 +60,33 @@ nand_flash_kernel () {
   echo "Done flashing the kernel!"
 }
 
-nand_flash_rfs () {
-  rfs_path=$1
+nand_flash_bulk () {
+  bulk_path=$1
   echo -n "Flashing the root filesystem..."
-  ${SSH} "/usr/sbin/ubiformat -y $RFS_PARTITION"
-  ${SSH} "/usr/sbin/ubiattach -p $RFS_PARTITION"
+  ${SSH} "/usr/sbin/ubiformat -y $Bulk_PARTITION"
+  ${SSH} "/usr/sbin/ubiattach -p $Bulk_PARTITION"
   sleep 1
-  ${SSH} "/usr/sbin/ubimkvol /dev/ubi0 -N RFS -m"
+  ${SSH} "/usr/sbin/ubimkvol /dev/ubi0 -N Bulk -m"
   sleep 1
   ${SSH} "mount -t ubifs /dev/ubi0_0 /mnt/root"
   # Note: We used to use a ubifs image here, but now use a .tar.gz.
   # This removes the need to care about PEB/LEB sizes at build time,
   # which is important as some LF2000 models (Ultra XDi) have differing sizes.
   echo "Writing rootfs image..."  
-  cat $rfs_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
+  cat $bulk_path | ${SSH} "gunzip -c | tar x -vf '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
-  ${SSH} '/usr/sbin/ubidetach -d 0'
+  ${SSH} "/usr/sbin/ubidetach -d 0"
   sleep 3
   echo "Done flashing the root filesystem!"
 }
 
-nand_maybe_wipe_roms () {
-  read -p "Do you want to format the roms partition? (You should do this on the first flash of retroleap) (y/n)" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]
-  then
-    ${SSH} /usr/sbin/ubiformat /dev/mtd3
-    ${SSH} /usr/sbin/ubiattach -p /dev/mtd3
-    ${SSH} /usr/sbin/ubimkvol /dev/ubi0 -m -N roms
-  fi
+nand_maybe_wipe_rfs () {
+  ${SSH} "/usr/sbin/ubiformat $RFS_PARTITION"
+  ${SSH} "/usr/sbin/ubiattach -p $RFS_PARTITION"
+  sleep 1
+  ${SSH} "/usr/sbin/ubimkvol /dev/ubi0 -N RFS -m"
+  ${SSH} "/usr/sbin/ubidetach -d 0"
+  sleep 3
 }
 
 flash_nand () {
@@ -105,8 +104,8 @@ flash_nand () {
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   nand_part_detect
   nand_flash_kernel $kernel
-  nand_flash_rfs ${prefix}rootfs.tar.gz
-  nand_maybe_wipe_roms 
+  nand_flash_bulk ${prefix}rootfs.tar.gz
+  nand_maybe_wipe_rfs 
   echo "Done! Rebooting the host."
   ${SSH} '/sbin/reboot'
 }
@@ -123,16 +122,16 @@ mmc_flash_kernel () {
   echo "Done flashing the kernel!"
 }
 
-mmc_flash_rfs () {
-  rfs_path=$1
+mmc_flash_bulk () {
+  bulk_path=$1
   # Size of the rootfs to be flashed, in bytes.
   echo -n "Flashing the root filesystem..."
-  ${SSH} "/sbin/mkfs.ext4 -F -L RFS -O ^metadata_csum /dev/mmcblk0p3"
+  ${SSH} "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p3"
   # TODO: This directory structure should be included in surgeon images.
   ${SSH} "mkdir /mnt/root"
   ${SSH} "mount -t ext4 /dev/mmcblk0p3 /mnt/root"
   echo "Writing rootfs image..."  
-  cat $rfs_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
+  cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
   echo "Done flashing the root filesystem!"
 }
@@ -143,7 +142,7 @@ flash_mmc () {
   # For the first ssh command, skip hostkey checking to avoid prompting the user.
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   mmc_flash_kernel ${prefix}uImage
-  mmc_flash_rfs ${prefix}rootfs.tar.gz
+  mmc_flash_bulk ${prefix}rootfs.tar.gz
   echo "Done! Rebooting the host."
   sleep 3
   ${SSH} '/sbin/reboot'
