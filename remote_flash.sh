@@ -36,7 +36,7 @@ boot_surgeon () {
   memloc=$2
   echo "Booting the Surgeon environment..."
   python2 make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf
-  sudo python2 boot_surgeon.py surgeon_tmp.cbf
+  python2 boot_surgeon.py surgeon_tmp.cbf
   echo -n "Done! Waiting for Surgeon to come up..."
   rm surgeon_tmp.cbf
   sleep 15
@@ -73,14 +73,14 @@ nand_flash_bulk () {
   # This removes the need to care about PEB/LEB sizes at build time,
   # which is important as some LF2000 models (Ultra XDi) have differing sizes.
   echo "Writing rootfs image..."  
-  cat $bulk_path | ${SSH} "gunzip -c | tar x -vf '-' -C /mnt/root"
+  cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
   ${SSH} "/usr/sbin/ubidetach -d 0"
   sleep 3
   echo "Done flashing the root filesystem!"
 }
 
-nand_maybe_wipe_rfs () {
+nand_wipe_rfs () {
   ${SSH} "/usr/sbin/ubiformat $RFS_PARTITION"
   ${SSH} "/usr/sbin/ubiattach -p $RFS_PARTITION"
   sleep 1
@@ -105,9 +105,9 @@ flash_nand () {
   nand_part_detect
   nand_flash_kernel $kernel
   nand_flash_bulk ${prefix}rootfs.tar.gz
-  nand_maybe_wipe_rfs 
+  nand_wipe_rfs 
   echo "Done! Rebooting the host."
-  ${SSH} '/sbin/reboot'
+  ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
 }
 
 mmc_flash_kernel () {
@@ -133,6 +133,7 @@ mmc_flash_bulk () {
   echo "Writing rootfs image..."  
   cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
+  sleep 3
   echo "Done flashing the root filesystem!"
 }
 
@@ -144,8 +145,7 @@ flash_mmc () {
   mmc_flash_kernel ${prefix}uImage
   mmc_flash_bulk ${prefix}rootfs.tar.gz
   echo "Done! Rebooting the host."
-  sleep 3
-  ${SSH} '/sbin/reboot'
+  ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
 }
 
 show_warning
