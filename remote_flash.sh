@@ -104,7 +104,7 @@ flash_nand () {
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   nand_part_detect
   nand_flash_kernel $kernel
-  nand_flash_bulk ${prefix}rootfs.tar.gz
+  nand_flash_bulk rootfs.tar.gz
   nand_wipe_rfs 
   echo "Done! Rebooting the host."
   ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
@@ -143,7 +143,7 @@ flash_mmc () {
   # For the first ssh command, skip hostkey checking to avoid prompting the user.
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   mmc_flash_kernel ${prefix}uImage
-  mmc_flash_bulk ${prefix}rootfs.tar.gz
+  mmc_flash_bulk rootfs.tar.gz
   echo "Done! Rebooting the host."
   ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
 }
