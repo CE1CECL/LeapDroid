@@ -13,8 +13,6 @@ Build Android 2.3.7 RootFS yourself:
 
 ```
 
-rm -rfv armeabi-v7a
-rm -rfv armeabi-v7a-10_r05.zip
 wget https://dl.google.com/android/repository/sys-img/android/armeabi-v7a-10_r05.zip
 unzip armeabi-v7a-10_r05.zip
 cd armeabi-v7a
@@ -61,17 +59,17 @@ setfacl --restore=../rc.acl
 cd system/
 cd lib/
 cd egl/
-rm -rfv egl.cfg
-rm -rfv *mulatio*
+getfacl -R egl.cfg >../../../../egl.acl
+echo "0 0 android" >egl.cfg
+setfacl --restore=../../../../egl.acl
 cd ../
 cd ../
 cd ../
 cd system/
 cd etc/
-rm -rfv audio_policy.conf
 cd ../
 cd ../
-tar -zcvf ../rootfs.tar.gz ./
+tar -zcvf ../rootfs2.tar.gz ./
 cd ../
 umount system
 umount userdata
@@ -82,8 +80,6 @@ Build Android 4.0.4 RootFS yourself:
 
 ```
 
-rm -rfv armeabi-v7a
-rm -rfv armeabi-v7a-15_r05.zip
 wget https://dl.google.com/android/repository/sys-img/android/armeabi-v7a-15_r05.zip
 unzip armeabi-v7a-15_r05.zip
 cd armeabi-v7a
@@ -129,17 +125,20 @@ setfacl --restore=../rc.acl
 cd system/
 cd lib/
 cd egl/
-rm -rfv egl.cfg
-rm -rfv *mulatio*
+getfacl -R egl.cfg >../../../../egl.acl
+echo "0 0 android" >egl.cfg
+setfacl --restore=../../../../egl.acl
 cd ../
 cd ../
 cd ../
 cd system/
+getfacl -R build.prop >../../prop.acl
+sed -i 's/net.bt.name=Android/net.bt.name=Android\nqemu.hw.mainkeys=0/g' build.prop
+setfacl --restore=../../prop.acl
 cd etc/
-rm -rfv audio_policy.conf
 cd ../
 cd ../
-tar -zcvf ../rootfs.tar.gz ./
+tar -zcvf ../rootfs4.tar.gz ./
 cd ../
 umount system
 umount userdata
