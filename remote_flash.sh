@@ -78,16 +78,6 @@ nand_flash_bulk () {
   echo "Done flashing the root filesystem!"
 }
 
-nand_wipe_rfs () {
-  ${SSH} "/usr/sbin/ubiformat $RFS_PARTITION"
-  ${SSH} "/usr/sbin/ubiattach -p $RFS_PARTITION"
-  sleep 1
-  ${SSH} "/usr/sbin/ubimkvol /dev/ubi0 -N RFS -m"
-  sleep 1
-  ${SSH} "/usr/sbin/ubidetach -d 0"
-  sleep 3
-}
-
 flash_nand () {
   prefix=$1
   if [[ $prefix == lf1000_* ]]; then
@@ -104,7 +94,6 @@ flash_nand () {
   nand_part_detect
   nand_flash_kernel $kernel
   nand_flash_bulk rootfs.tar.gz
-  nand_wipe_rfs 
   echo "Done! Rebooting the host."
   ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
 }
@@ -136,10 +125,6 @@ mmc_flash_bulk () {
   echo "Done flashing the root filesystem!"
 }
 
-mmc_wipe_rfs () {
-  ${SSH} "/sbin/mkfs.ext4 -F -L RFS -O ^metadata_csum /dev/mmcblk0p3"
-}
-
 flash_mmc () {
   prefix=$1
   boot_surgeon ${prefix}surgeon_zImage superhigh
@@ -147,7 +132,6 @@ flash_mmc () {
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   mmc_flash_kernel ${prefix}uImage
   mmc_flash_bulk rootfs.tar.gz
-  mmc_wipe_rfs
   echo "Done! Rebooting the host."
   ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
 }
@@ -157,7 +141,7 @@ prefix=$1
 if [ -z "$prefix" ]
 then
   show_machinelist
-  read -p "Enter choice (1 - 5)" choice
+  read -p "Enter choice (1 - 3)" choice
   case $choice in
     1) prefix="lf1000_" ;;
     2) prefix="lf2000_" ;;

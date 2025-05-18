@@ -125,17 +125,6 @@ EXIT /B 0
   echo Done flashing the root filesystem!
 EXIT /B 0
 
-:nand_wipe_rfs
-  %SSH% "/usr/sbin/ubiformat %RFS_PARTITION%"
-  %SSH% "/usr/sbin/ubiattach -p %RFS_PARTITION%"
-  timeout /t 1
-  %SSH% "/usr/sbin/ubimkvol /dev/ubi0 -m -N RFS")
-  timeout /t 1
-  %SSH% "/usr/sbin/ubidetach -d 0"
-  %SSH% "/usr/sbin/ubidetach -d 0"
-  timeout /t 3
-EXIT /B 0
-
 :flash_nand
   SET prefix=%~1
   if /I %prefix:"=% == lf1000_ (set memloc="high") else (set memloc="superhigh")
@@ -155,7 +144,6 @@ EXIT /B 0
   call :nand_part_detect
   call :nand_flash_kernel %kernel:"=%
   call :nand_flash_bulk rootfs.tar.gz
-  call :nand_wipe_rfs 
   echo Done! Rebooting the host.
   %SSH% '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
 EXIT /B 0
@@ -186,10 +174,6 @@ EXIT /B 0
   echo Done flashing the root filesystem!
 EXIT /B 0
 
-:mmc_wipe_rfs
-  %SSH% "/sbin/mkfs.ext4 -F -L RFS -O ^metadata_csum /dev/mmcblk0p3"
-EXIT /B 0
-
 :flash_mmc
   SET prefix=%~1
   call : boot_surgeon %prefix%surgeon_zImage superhigh
@@ -197,7 +181,6 @@ EXIT /B 0
   %SSH% -o "StrictHostKeyChecking no" 'test'
   call :mmc_flash_kernel %prefix%uImage
   call :mmc_flash_bulk rootfs.tar.gz
-  call :mmc_wipe_rfs
   echo(
   echo Done! Rebooting the host.
   %SSH% '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
