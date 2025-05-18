@@ -181,7 +181,7 @@ class connection(object):
             
             while timeout:
                 if sys.platform == 'win32':
-                    lines = self.sg_scan()
+                    lines = str(self.sg_scan())
                     if lines:
                         for line in lines.split('\n'):
                             if self._vendor_name in line.lower():
