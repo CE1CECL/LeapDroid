@@ -6,6 +6,8 @@
 SSH="ssh root@169.254.8.1"
 
 show_warning () {
+  clear
+
   echo "Leapster flash utility - installs a custom OS on your leapster!"
   echo
   echo "WARNING! This utility will ERASE the stock leapster OS and any other"
