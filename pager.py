@@ -95,7 +95,6 @@ class client(object):
 
             # Use of int function - should be ok as already checked in cbf to ensure buffer/packet size = whole number
             packets = int(buf_len/cbf.PACKET_SIZE)
-            print(packets)
 
             byte1 = '00'
             total = 0
@@ -105,10 +104,9 @@ class client(object):
                 cmdl = '%s %s -b -s %s -n 2A 00 00 00 00 %s 00 00 20 00' % (self._sg_raw, self._mount_config.device_id, cbf.PACKET_SIZE, byte1)
                 cmd = shlex_split(cmdl)
                 byte1 = '01'
-                #print(cmd)
                 p = Popen(cmd, stdin=PIPE, stderr=PIPE)
                 p.stdin.write(buf[last_total:last_total+cbf.PACKET_SIZE])
-                err = str(p.stderr.read(), 'utf-8')
+                err = str(p.stderr.read())
                 
                 if not 'Good' in err:
                     self.error('SCSI error.')

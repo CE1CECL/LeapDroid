@@ -116,7 +116,7 @@ class connection(object):
             if not err:
                 ret = p.stdout.read()
                 
-                if self._vendor_name in str(ret.lower(), 'utf-8'):
+                if self._vendor_name in str(ret.lower()):
                     return ret
                 else:
                     return ''
@@ -133,7 +133,7 @@ class connection(object):
 
             while time_out:
                 if sys.platform == 'win32':
-                    lines = str(self.sg_scan(), 'utf-8').split('\n')
+                    lines = str(self.sg_scan()).split('\n')
                     if lines:
                         for line in lines:
                             if self._vendor_name in line.lower():
