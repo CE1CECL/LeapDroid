@@ -66,6 +66,7 @@ EXIT /B 0
   DEL /F surgeon_tmp.cbf
   TIMEOUT /NOBREAK /T 15
   echo Done! Make Sure You Configure Your Device's IP Address to "169.254.8.10"!
+  control ncpa.cpl
   pause
 EXIT /B 0
 
