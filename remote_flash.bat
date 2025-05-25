@@ -65,7 +65,8 @@ EXIT /B 0
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
   TIMEOUT /NOBREAK /T 15
-  echo Done!
+  echo Done! Make Sure You Configure Your Device's IP Address to "169.254.8.10"!
+  pause
 EXIT /B 0
 
 :nand_part_detect
@@ -84,7 +85,6 @@ EXIT /B 0
 
   SET BP=awk -e '$4 ~ \"Bulk\"  {print \"/dev/\" substr($1, 1, length($1)-1)}' /proc/mtd
   SET "var=%SSH%%SPACE:"=%%BP%"
-  echo %SSH:"=% "%BP%"
   FOR /f %%i in ('%SSH:"=% "%BP%"') do set "BULK_PARTITION=%%i"
 
   echo "Detected Kernel partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%"
@@ -141,7 +141,7 @@ EXIT /B 0
   call :nand_flash_kernel %kernel:"=%
   call :nand_flash_bulk rootfs.tar.gz
   echo Done! Rebooting the host.
-  %SSH% '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
+  %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 EXIT /B 0
 
 :mmc_flash_kernel
@@ -179,5 +179,5 @@ EXIT /B 0
   call :mmc_flash_bulk rootfs.tar.gz
   echo(
   echo Done! Rebooting the host.
-  %SSH% '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
+  %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 EXIT /B 0
