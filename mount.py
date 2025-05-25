@@ -133,7 +133,7 @@ class connection(object):
 
             while time_out:
                 if sys.platform == 'win32':
-                    lines = str(self.sg_scan()).split('\n')
+                    lines = str(self.sg_scan().decode('utf-8')).split('\n')
                     if lines:
                         for line in lines:
                             if self._vendor_name in line.lower():
