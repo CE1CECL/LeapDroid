@@ -76,7 +76,6 @@ nand_flash_bulk () {
   cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
   ${SSH} "/usr/sbin/ubidetach -d 0"
-  sleep 3
   echo "Done flashing the root filesystem!"
 }
 
@@ -123,7 +122,6 @@ mmc_flash_bulk () {
   echo "Writing rootfs image..."  
   cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
-  sleep 3
   echo "Done flashing the root filesystem!"
 }
 
@@ -148,7 +146,7 @@ then
     1) prefix="lf1000_" ;;
     2) prefix="lf2000_" ;;
     3) prefix="lf3000_" ;;
-    *) echo -e "Unknown choice!" && sleep 2
+    *) echo -e "Unknown choice!" && exit 1
   esac
 fi
 

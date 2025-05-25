@@ -22,8 +22,6 @@ SET /P REPLY=
 if /I "%REPLY%" == "1" (SET prefix="lf1000_")
 if /I "%REPLY%" == "2" (SET prefix="lf2000_")
 if /I "%REPLY%" == "3" (SET prefix="lf3000_")
-timeout /t 2
-
 IF /I "%prefix%" == "lf3000_" (call :flash_mmc "%prefix%") ELSE (call :flash_nand "%prefix%")
 EXIT /B %ERRORLEVEL%
 
@@ -63,11 +61,10 @@ EXIT /B 0
   SET memloc=%~2
   echo Booting the Surgeon environment...
   python make_cbf.py %memloc:"=% %surgeon_path:"=% surgeon_tmp.cbf
-  echo Lines to write (should be a whole number) -
   python boot_surgeon.py surgeon_tmp.cbf
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
-  timeout /t 15
+  TIMEOUT /NOBREAK /T 15
   echo Done!
 EXIT /B 0
 
@@ -107,9 +104,9 @@ EXIT /B 0
   echo Flashing the root filesystem...
   %SSH% "/usr/sbin/ubiformat -y %BULK_PARTITION%"
   %SSH% "/usr/sbin/ubiattach -p %BULK_PARTITION%"
-  timeout /t 1
+  TIMEOUT /NOBREAK /T 1
   %SSH% "/usr/sbin/ubimkvol /dev/ubi0 -N Bulk -m"
-  timeout /t 1
+  TIMEOUT /NOBREAK /T 1
   %SSH% "mount -t ubifs /dev/ubi0_0 /mnt/root"
   echo Writing rootfs image...
 
@@ -120,7 +117,6 @@ EXIT /B 0
   type %bulk_path% | %SSH% "gunzip -c | tar x -f '-' -C /mnt/root"
   %SSH% "umount /mnt/root"
   %SSH% "/usr/sbin/ubidetach -d 0"
-  timeout /t 3
   echo(
   echo Done flashing the root filesystem!
 EXIT /B 0
