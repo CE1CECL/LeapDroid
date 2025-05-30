@@ -1,8 +1,0 @@
-# Ignore any .pyc files
-*.pyc
-# Ignore binaries that will be flashed to the device
-*_surgeon_zImage
-*_rootfs.tar.gz
-*_uImage
-*_zImage
-*.cbf
