@@ -14,7 +14,7 @@ File can be any name, but must conform to CBF standards.
     """
     pager_client = pager.client(conn_iface(mount_connection()))
     pager_client.upload(path)
-    print 'Booting surgeon.'
+    print ('Booting surgeon.')
 
 
 if len(sys.argv) != 2:

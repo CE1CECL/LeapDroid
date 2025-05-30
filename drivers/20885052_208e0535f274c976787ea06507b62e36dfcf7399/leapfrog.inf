@@ -1,0 +1,260 @@
+; Licensed to Leapfrog
+;
+; Copyright (c) 2005-2015 Belcarra Technologies (2005) Corp
+;
+; NOTICE: This software is licensed, not sold. Any modification of
+; this INF file to change the reference to a new device or an operating
+; system is not permitted except as may be authorized in writing by
+; Belcarra.
+;
+
+; This package will install the:
+;
+;       Leapfrog USBLAN driver
+;
+; This will enable an Leapfrog Device to use Networking over USB protocols
+; to connect to Windows systems..
+;
+; For more information go to:
+;
+;       http://www.belcarra.com
+;
+; For licensing information to use the Belcarra USBLAN Driver contact:
+;
+;       sales@belcarra.com
+;
+
+
+[Version]
+Signature       = "$CHICAGO$"
+Class           = Net
+ClassGUID       = {4D36E972-E325-11CE-BFC1-08002BE10318}
+Provider        = "Leapfrog"
+CatalogFile    	= leapfrog.cat
+DriverVer       = 06/02/2016,02.04.10.001
+Compatible      = 1
+;DriverPackageDisplayName = "USBLAN"
+;DriverPackageType = PlugAndPlay
+
+; 
+; The INF file will match all versions of Windows allowing it to be used to
+; to install a single driver for:
+;
+;    - all types of Windows
+;    - only version 5 Windows 
+;    - version 6 (and newer) Windows
+;
+; This is slightly complicated by the semantics of the INF matching. 
+; 
+;    NTamd64.5.0                                specify a single match section for
+;                                               anything newer than 5.0
+;    NTamd64.5.0, NTamd64.6.0, NTamd64.6.3      specify three match sections, one
+;                                               for 5.0 and another for anything
+;                                               newer than 6.0 but not 6.3 and
+;                                               finally anything 6.3 or newer
+;
+; By specifying all versions and then not providing any VID/PID matches the
+; INF file can be targeted to specific OS versions.
+
+;
+; N.B. All of the matching keywords need to be declared in the manufacturer line.
+;
+[Manufacturer]
+%BTCUsbLan.Manufacturer% = Leapfrog,  NTx86.5.0, NTamd64.5.0, NTx86.6.0, NTamd64.6.0, NTx86.6.1, NTamd64.6.1, NTx86.6.2, NTamd64.6.2
+
+;----------------------Windows XP and 2000 Specific----------------------------
+[BTCUsbLan.ndi]
+;Characteristics                         = 0x82          ; NCF_SOFTWARE_ENUMERATED, NCF_HAS_UI
+Characteristics                         = 0x84          ; NCF_PHYSICAL, NCF_HAS_UI
+BusType                                 = 15
+*IfType                                 = 6             ; IF_TYPE_ETHERNET_CSMACD
+*MediaType                              = 0             ; NdisMedium802_3
+*PhysicalMediaType                      = 0             ; NdisPhysicalMediumUnspecified
+;*PhysicalMediaType                      = 14            ; NdisPhysicalMedium802_3
+AddReg                                  = BTCUsbLan.Reg
+CopyFiles                               = BTCUsbLan.CopyFiles
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+;-----------------------------------------------------------------------------
+[BTCUsbLan.Reg]
+HKR,    ,                       BusNumber,      0,  "0"
+HKR, Ndi,                       Service,        0,  "LeapfrogUSBLAN"
+HKR, Ndi\Interfaces,            UpperRange,     0,  "ndis5"
+HKR, Ndi\Interfaces,            LowerRange,     0,  "ethernet"
+
+; per adapter parameters
+; HKLM\System\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\000N\Ndi
+;
+HKR, Ndi\params\NetworkAddress,     ParamDesc,  0,  "NetworkAddress"
+HKR, Ndi\params\NetworkAddress,     default,    0,  ""
+HKR, Ndi\params\NetworkAddress,     LimitText,  0,  "12"
+HKR, Ndi\params\NetworkAddress,     UpperCase,  0,  "1"
+HKR, Ndi\params\NetworkAddress,     optional,   0,  "1"
+HKR, Ndi\params\NetworkAddress,     type,       0,  "edit"
+HKR, Ndi\params\Jumboframe,        ParamDesc,  0, "JumboFrame"
+HKR, Ndi\params\Jumboframe,        default,    0, "0"
+HKR, Ndi\params\Jumboframe,        type,       0, "enum"
+HKR, Ndi\params\Jumboframe\enum,   "0",        0, "Disable"
+HKR, Ndi\params\Jumboframe\enum,   "3072",        0, "3KB MTU"
+HKR, Ndi\params\Jumboframe\enum,   "5120",        0, "5KB MTU"
+HKR, Ndi\params\Jumboframe\enum,   "7168",        0, "7KB MTU"
+HKR, Ndi\params\Jumboframe\enum,   "9216",        0, "9KB MTU"
+
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\LeapfrogUSBLAN,DHCPDType,            0x00010003, 1
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\LeapfrogUSBLAN,DHCPBase,             0x00010003, 0x0a000000
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\LeapfrogUSBLAN,OEM,                  0x00010000, "bc4733bd3c51aa1ca1db61db193140a848992b8038c272ccd78a3d0410de0306320ebf2b884f6955a2cf45a41a8a381bd480ac5af90b9a1f93c8d7def3719138"
+
+
+
+[BTCUsbLan.ndi.Services]
+AddService = "LeapfrogUSBLAN", 2, BTCUsbLan.AddService
+
+[BTCUsbLan.AddService]
+DisplayName                             = "Leapfrog USBLAN Service"
+ServiceType                             = 1    ; SERVICE_KERNEL_DRIVER
+StartType                               = 3    ; SERVICE_DEMAND_START
+ErrorControl                            = 1    ; NORMAL
+ServiceBinary                           = %12%\leapfrogblan.sys
+LoadOrderGroup                          = NDIS
+
+;-----------------------------------------------------------------------------
+; per enumerated adapter parameters
+; HKLM\System\CurrentControlSet\Enum\USB\<device_identifier>/{instance_identifier}\
+;
+
+[BTCUsbLan.ndi.HW]
+AddReg                                  = BTCUsbLan.HW.AddReg
+
+;[BTCUsbLan.ndi.nt.HW]
+;AddReg                                  = BTCUsbLan.HW.AddReg
+
+;[BTCUsbLan.ndi.ntamd64.HW]
+;AddReg                                  = BTCUsbLan.HW.AddReg
+
+;[BTCUsbLan.ndi.ntx86.HW]
+;AddReg                                  = BTCUsbLan.HW.AddReg
+
+[BTCUsbLan.HW.AddReg]
+HKR, ,RemovalPolicy, 0x00010001, 3
+HKR, ,SurpriseRemovalOK, 0x00010001, 1
+
+HKR, ,DeviceParameters\OriginalConfigurationValue, 0x00010001, 1
+HKR, ,DeviceParameters\AltConfigurationValue, 0x00010001, 0
+;HKR, DeviceParameters,OriginalConfigurationValue, 0x00010001, 1
+;HKR, DeviceParameters,AltConfigurationValue, 0x00010001, 0
+
+
+;---------------Common Variables-----------------------------------------------------------
+
+ 
+
+;[SourceDisksNames.x86]
+;1=%BTCUsbLan.DriverDiskName%,,,i386
+;
+;[SourceDisksNames.amd64]
+;1=%BTCUsbLan.DriverDiskName%,,,amd64
+
+[SourceDisksNames.x86]
+1=%BTCUsbLan.DriverDiskName%,,,i386
+
+[SourceDisksNames.amd64]
+1=%BTCUsbLan.DriverDiskName%,,,amd64
+
+[SourceDisksFiles]
+leapfrogblan.sys=1
+
+[DestinationDirs]
+BTCUsbLan.CopyFiles = 12 ; WINDOWS\SYSTEM32\DRIVERS
+
+[BTCUsbLan.CopyFiles]
+leapfrogblan.sys
+
+
+;-----------------------------------------------------------------------------
+
+[strings]
+
+;BTCUsbLan.Provider                      = "Leapfrog"
+;BTCUsbLan.PackageDisplayName            = "USBLAN"
+;BTCUsbLan.Service.DispName              = "Leapfrog USBLAN Service"
+
+BTCUsbLan.DeviceDesc                    = "Leapfrog USBLAN Adapter"
+BTCUsbLan.Manufacturer                  = "Leapfrog"
+BTCUsbLan.DriverDiskName                = "Leapfrog Installation Directory"
+
+
+;-----------------------------------------------------------------------------
+
+
+
+;
+; This INF file WILL MATCH for .NTx86.6.2
+
+[Leapfrog.NTx86.6.2]
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0014
+
+;
+; This INF file WILL MATCH for .NTamd64.6.2
+
+[Leapfrog.NTamd64.6.2]
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB3\VID_0F63&PID_0014
+
+;
+; This section MUST BE PRESENT to prevent matching for .NTx86.5.0
+
+[Leapfrog.NTx86.5.0]
+
+;
+; This section MUST BE PRESENT to prevent matching for .NTamd64.5.0
+
+[Leapfrog.NTamd64.5.0]
+
+;
+; This section MUST BE PRESENT to prevent matching for .NTx86.6.0
+
+[Leapfrog.NTx86.6.0]
+
+;
+; This section MUST BE PRESENT to prevent matching for .NTamd64.6.0
+
+[Leapfrog.NTamd64.6.0]
+
+;
+; This section MUST BE PRESENT to prevent matching for .NTx86.6.1
+
+[Leapfrog.NTx86.6.1]
+
+;
+; This section MUST BE PRESENT to prevent matching for .NTamd64.6.1
+
+[Leapfrog.NTamd64.6.1]

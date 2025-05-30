@@ -1,0 +1,580 @@
+
+project build/
+diff --git a/build/core/combo/HOST_linux-x86.mk b/build/core/combo/HOST_linux-x86.mk
+index c7d65b3..2428617 100644
+--- a/build/core/combo/HOST_linux-x86.mk
++++ b/build/core/combo/HOST_linux-x86.mk
+@@ -56,6 +56,6 @@ HOST_GLOBAL_CFLAGS += \
+ 	-include $(call select-android-config-h,linux-x86)
+ 
+ # Disable new longjmp in glibc 2.11 and later. See bug 2967937.
+-HOST_GLOBAL_CFLAGS += -D_FORTIFY_SOURCE=0
++HOST_GLOBAL_CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
+ 
+ HOST_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+diff --git a/build/core/combo/TARGET_linux-x86.mk b/build/core/combo/TARGET_linux-x86.mk
+index 0fb6edc..a400394 100644
+--- a/build/core/combo/TARGET_linux-x86.mk
++++ b/build/core/combo/TARGET_linux-x86.mk
+@@ -95,11 +95,7 @@ TARGET_GLOBAL_CFLAGS += \
+ TARGET_GLOBAL_CPPFLAGS += \
+ 			-fno-use-cxa-atexit
+ 
+-ifeq ($(TARGET_ARCH_VARIANT),x86-atom)
+-    TARGET_GLOBAL_CFLAGS += -march=atom -mstackrealign -DUSE_SSSE3 -DUSE_SSE2 -mfpmath=sse
+-else
+-    TARGET_GLOBAL_CFLAGS += -march=i686
+-endif
++TARGET_GLOBAL_CFLAGS += -march=i486
+ 
+ TARGET_GLOBAL_CFLAGS += -mbionic
+ TARGET_GLOBAL_CFLAGS += -D__ANDROID__
+diff --git a/build/core/combo/arch/arm/armv4t.mk b/build/core/combo/arch/arm/armv4t.mk
+index abc8fa2..aefb9b0 100644
+--- a/build/core/combo/arch/arm/armv4t.mk
++++ b/build/core/combo/arch/arm/armv4t.mk
+@@ -8,12 +8,6 @@
+ # not supported.
+ #
+ $(warning ARMv4t support is currently a work in progress. It does not work right now!)
+-ARCH_ARM_HAVE_THUMB_SUPPORT := false
+-ARCH_ARM_HAVE_THUMB_INTERWORKING := false
+-ARCH_ARM_HAVE_64BIT_DATA := false
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := false
+-ARCH_ARM_HAVE_CLZ := false
+-ARCH_ARM_HAVE_FFS := false
+ 
+ DEFAULT_TARGET_CPU := arm920t
+ 
+diff --git a/build/core/combo/arch/arm/armv5te.mk b/build/core/combo/arch/arm/armv5te.mk
+index 29aada6..88e57b7 100644
+--- a/build/core/combo/arch/arm/armv5te.mk
++++ b/build/core/combo/arch/arm/armv5te.mk
+@@ -1,12 +1,6 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv5TE architecture and higher
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+ 
+ # Note: Hard coding the 'tune' value here is probably not ideal,
+ # and a better solution should be found in the future.
+diff --git a/build/core/combo/arch/arm/armv7-a-neon.mk b/build/core/combo/arch/arm/armv7-a-neon.mk
+index 7b5b8ed..746bca2 100644
+--- a/build/core/combo/arch/arm/armv7-a-neon.mk
++++ b/build/core/combo/arch/arm/armv7-a-neon.mk
+@@ -1,16 +1,6 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv7-a architecture and higher with NEON
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+-ARCH_ARM_HAVE_ARMV7A            := true
+-ARCH_ARM_HAVE_VFP               := true
+-ARCH_ARM_HAVE_VFP_D32           := true
+-ARCH_ARM_HAVE_NEON              := true
+ 
+ # Note: Hard coding the 'tune' value here is probably not ideal,
+ # and a better solution should be found in the future.
+diff --git a/build/core/combo/arch/arm/armv7-a.mk b/build/core/combo/arch/arm/armv7-a.mk
+index 0ca3ec6..f6b69f0 100644
+--- a/build/core/combo/arch/arm/armv7-a.mk
++++ b/build/core/combo/arch/arm/armv7-a.mk
+@@ -1,14 +1,6 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv7-a architecture and higher
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+-ARCH_ARM_HAVE_ARMV7A            := true
+-ARCH_ARM_HAVE_VFP               := true
+ 
+ # Note: Hard coding the 'tune' value here is probably not ideal,
+ # and a better solution should be found in the future.
+diff --git a/build/target/board/emulator/BoardConfig.mk b/build/target/board/emulator/BoardConfig.mk
+index 9ab607a..5a0b549 100644
+--- a/build/target/board/emulator/BoardConfig.mk
++++ b/build/target/board/emulator/BoardConfig.mk
+@@ -9,4 +9,4 @@ TARGET_NO_KERNEL := true
+ HAVE_HTC_AUDIO_DRIVER := true
+ 
+ # no hardware camera
+-USE_CAMERA_STUB := true
++USE_CAMERA_STUB := false
+diff --git a/build/target/board/generic/BoardConfig.mk b/build/target/board/generic/BoardConfig.mk
+index 57e60d3..e66bd7a 100644
+--- a/build/target/board/generic/BoardConfig.mk
++++ b/build/target/board/generic/BoardConfig.mk
+@@ -21,12 +21,18 @@ TARGET_NO_KERNEL := true
+ TARGET_ARCH_VARIANT := armv7-a
+ TARGET_CPU_ABI := armeabi-v7a
+ TARGET_CPU_ABI2 := armeabi
++ARCH_ARM_HAVE_ARMV7A := true
++ARCH_ARM_HAVE_NEON := false
++ARCH_ARM_HAVE_THUMB_SUPPORT := true
++ARCH_ARM_HAVE_TLS_REGISTER := true
++ARCH_ARM_HAVE_VFP := true
++ARCH_ARM_HAVE_VFP_D32 := false
+ 
+ HAVE_HTC_AUDIO_DRIVER := true
+ BOARD_USES_GENERIC_AUDIO := true
+ 
+ # no hardware camera
+-USE_CAMERA_STUB := true
++USE_CAMERA_STUB := false
+ 
+ # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
+ TARGET_SHELL := ash
+@@ -38,8 +44,8 @@ WITH_DEXPREOPT := true
+ endif
+ 
+ # Build OpenGLES emulation guest and host libraries
+-BUILD_EMULATOR_OPENGL := true
++BUILD_EMULATOR_OPENGL := false
+ 
+ # Build and enable the OpenGL ES View renderer. When running on the emulator,
+ # the GLES renderer disables itself if host GL acceleration isn't available.
+-USE_OPENGL_RENDERER := true
++USE_OPENGL_RENDERER := false
+diff --git a/build/target/board/generic_armv5/BoardConfig.mk b/build/target/board/generic_armv5/BoardConfig.mk
+index d8fa2fe..21a6b2d 100644
+--- a/build/target/board/generic_armv5/BoardConfig.mk
++++ b/build/target/board/generic_armv5/BoardConfig.mk
+@@ -19,5 +19,11 @@ include build/target/board/generic/BoardConfig.mk
+ TARGET_ARCH_VARIANT :=
+ TARGET_CPU_ABI := armeabi
+ TARGET_CPU_ABI2 :=
++ARCH_ARM_HAVE_ARMV7A := false
++ARCH_ARM_HAVE_NEON := false
++ARCH_ARM_HAVE_THUMB_SUPPORT := true
++ARCH_ARM_HAVE_TLS_REGISTER := false
++ARCH_ARM_HAVE_VFP := false
++ARCH_ARM_HAVE_VFP_D32 := false
+ 
+ WITH_DEXPREOPT := false
+diff --git a/build/target/board/generic_x86/BoardConfig.mk b/build/target/board/generic_x86/BoardConfig.mk
+index c62b0a4..38a23b0 100644
+--- a/build/target/board/generic_x86/BoardConfig.mk
++++ b/build/target/board/generic_x86/BoardConfig.mk
+@@ -8,7 +8,7 @@ TARGET_NO_BOOTLOADER := true
+ TARGET_NO_KERNEL := true
+ TARGET_CPU_ABI := x86
+ TARGET_ARCH := x86
+-TARGET_ARCH_VARIANT := x86-atom
++TARGET_ARCH_VARIANT := x86
+ TARGET_PRELINK_MODULE := false
+ 
+ # The IA emulator (qemu) uses the Goldfish devices
+@@ -16,7 +16,7 @@ HAVE_HTC_AUDIO_DRIVER := true
+ BOARD_USES_GENERIC_AUDIO := true
+ 
+ # no hardware camera
+-USE_CAMERA_STUB := true
++USE_CAMERA_STUB := false
+ 
+ # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
+ TARGET_SHELL := ash
+@@ -28,8 +28,8 @@ WITH_DEXPREOPT := true
+ endif
+ 
+ # Build OpenGLES emulation host and guest libraries
+-BUILD_EMULATOR_OPENGL := true
++BUILD_EMULATOR_OPENGL := false
+ 
+ # Build and enable the OpenGL ES View renderer. When running on the emulator,
+ # the GLES renderer disables itself if host GL acceleration isn't available.
+-USE_OPENGL_RENDERER := true
++USE_OPENGL_RENDERER := false
+diff --git a/build/target/board/vbox_x86/BoardConfig.mk b/build/target/board/vbox_x86/BoardConfig.mk
+index 94df57c..644a9e1 100644
+--- a/build/target/board/vbox_x86/BoardConfig.mk
++++ b/build/target/board/vbox_x86/BoardConfig.mk
+@@ -8,7 +8,7 @@ TARGET_COMPRESS_MODULE_SYMBOLS := false
+ TARGET_NO_RECOVERY := true
+ TARGET_HARDWARE_3D := false
+ BOARD_USES_GENERIC_AUDIO := true
+-USE_CAMERA_STUB := true
++USE_CAMERA_STUB := false
+ TARGET_PROVIDES_INIT_RC := true
+ USE_CUSTOM_RUNTIME_HEAP_MAX := "32M"
+ TARGET_CPU_ABI := x86
+diff --git a/build/target/product/full.mk b/build/target/product/full.mk
+index 0f1956b..a328133 100644
+--- a/build/target/product/full.mk
++++ b/build/target/product/full.mk
+@@ -23,10 +23,10 @@ PRODUCT_PACKAGES := \
+     Camera
+ 
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+-$(call inherit-product, $(SRC_TARGET_DIR)/board/generic/device.mk)
++$(call inherit-product, $(SRC_TARGET_DIR)/board/generic_armv5/device.mk)
+ 
+ # Overrides
+ PRODUCT_NAME := full
+-PRODUCT_DEVICE := generic
++PRODUCT_DEVICE := generic_armv5
+ PRODUCT_BRAND := Android
+ PRODUCT_MODEL := Full Android on Emulator
+
+project external/webrtc/
+diff --git a/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h b/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h
+index 8716ca9..8d32dc5 100644
+--- a/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h
++++ b/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h
+@@ -19,11 +19,21 @@
+ 
+ #ifdef WEBRTC_ANDROID
+ 
++#ifdef __ARM_ARCH_5__
++__asm (
++"   .arch armv7-a\n"
++);
++#endif
++
+ WEBRTC_INLINE WebRtc_Word32 WEBRTC_SPL_MUL(WebRtc_Word32 a, WebRtc_Word32 b)
+ {
++#ifdef __ARM_ARCH_5__
++    return a * b;
++#else
+     WebRtc_Word32 tmp;
+     __asm__("mul %0, %1, %2":"=r"(tmp):"r"(a), "r"(b));
+     return tmp;
++#endif
+ }
+ 
+ WEBRTC_INLINE WebRtc_Word32 WEBRTC_SPL_MUL_16_32_RSFT16(WebRtc_Word16 a,
+
+project frameworks/base/
+diff --git a/frameworks/base/core/java/android/view/HardwareRenderer.java b/frameworks/base/core/java/android/view/HardwareRenderer.java
+index 71f3cf51..6b79a24c 100644
+--- a/frameworks/base/core/java/android/view/HardwareRenderer.java
++++ b/frameworks/base/core/java/android/view/HardwareRenderer.java
+@@ -103,17 +103,17 @@ public abstract class HardwareRenderer {
+      * 
+      * @hide
+      */
+-    public static boolean sRendererDisabled = false;
++    public static final boolean sRendererDisabled = true;
+ 
+     /**
+      * Further hardware renderer disabling for the system process.
+      * 
+      * @hide
+      */
+-    public static boolean sSystemRendererDisabled = false;
++    public static final boolean sSystemRendererDisabled = true;
+ 
+-    private boolean mEnabled;
+-    private boolean mRequested = true;
++    private final boolean mEnabled = false;
++    private final boolean mRequested = false;
+ 
+     /**
+      * Invoke this method to disable hardware rendering in the current process.
+@@ -121,10 +121,7 @@ public abstract class HardwareRenderer {
+      * @hide
+      */
+     public static void disable(boolean system) {
+-        sRendererDisabled = true;
+-        if (system) {
+-            sSystemRendererDisabled = true;
+-        }
++
+     }
+ 
+     /**
+@@ -368,7 +365,7 @@ public abstract class HardwareRenderer {
+      * @return True if hardware acceleration is in use, false otherwise.
+      */
+     boolean isEnabled() {
+-        return mEnabled;
++        return false;
+     }
+ 
+     /**
+@@ -377,7 +374,7 @@ public abstract class HardwareRenderer {
+      * @param enabled True if the hardware renderer is in use, false otherwise.
+      */
+     void setEnabled(boolean enabled) {
+-        mEnabled = enabled;
++
+     }
+ 
+     /**
+@@ -387,7 +384,7 @@ public abstract class HardwareRenderer {
+      * @return True if requested, false otherwise.
+      */
+     boolean isRequested() {
+-        return mRequested;
++        return false;
+     }
+ 
+     /**
+@@ -397,7 +394,7 @@ public abstract class HardwareRenderer {
+      * @return True to request hardware acceleration, false otherwise.
+      */
+     void setRequested(boolean requested) {
+-        mRequested = requested;
++
+     }
+ 
+     @SuppressWarnings({"deprecation"})
+diff --git a/frameworks/base/core/res/res/values/config.xml b/frameworks/base/core/res/res/values/config.xml
+index 24afe15c..f9d6fb5d 100755
+--- a/frameworks/base/core/res/res/values/config.xml
++++ b/frameworks/base/core/res/res/values/config.xml
+@@ -241,10 +241,10 @@
+     <string translatable="false" name="config_tether_apndata"></string>
+ 
+     <!-- Boolean indicating whether the wifi chipset has dual frequency band support -->
+-    <bool translatable="false" name="config_wifi_dual_band_support">false</bool>
++    <bool translatable="false" name="config_wifi_dual_band_support">true</bool>
+ 
+     <!-- Boolean indicating whether the wifi chipset has p2p support -->
+-    <bool translatable="false" name="config_wifi_p2p_support">false</bool>
++    <bool translatable="false" name="config_wifi_p2p_support">true</bool>
+     <!-- Device type information conforming to Annex B format in WiFi Direct specification.
+          The default represents a dual-mode smartphone -->
+     <string translatable="false" name="config_wifi_p2p_device_type">10-0050F204-5</string>
+@@ -254,7 +254,7 @@
+          scan and wake the host when a configured SSID is detected by the dongle. This chipset
+          capability can provide power savings when wifi needs to be always kept on.
+          The driver commands needed to support the feature are BGSCAN-START and BGSCAN-STOP -->
+-    <bool translatable="false" name="config_wifi_background_scan_support">false</bool>
++    <bool translatable="false" name="config_wifi_background_scan_support">true</bool>
+ 
+     <!-- Integer indicating wpa_supplicant scan interval in milliseconds -->
+     <integer translatable="false" name="config_wifi_supplicant_scan_interval">15000</integer>
+@@ -272,13 +272,13 @@
+ 
+     <!-- Flag indicating whether the we should enable the automatic brightness in Settings.
+          Software implementation will be used if config_hardware_auto_brightness_available is not set -->
+-    <bool name="config_automatic_brightness_available">false</bool>
++    <bool name="config_automatic_brightness_available">true</bool>
+ 
+     <!-- Don't name config resources like this.  It should look like config_annoyDianne -->
+     <bool name="config_annoy_dianne">true</bool>
+ 
+     <!-- If this is true, the screen will come on when you unplug usb/power/whatever. -->
+-    <bool name="config_unplugTurnsOnScreen">false</bool>
++    <bool name="config_unplugTurnsOnScreen">true</bool>
+ 
+     <!-- If this is true, the screen will fade off. -->
+     <bool name="config_animateScreenLights">true</bool>
+@@ -287,7 +287,7 @@
+ 
+     <!-- If true, the screen can be rotated via the accelerometer in all 4
+          rotations as the default behavior. -->
+-    <bool name="config_allowAllRotations">false</bool>
++    <bool name="config_allowAllRotations">true</bool>
+ 
+     <!-- If true, the direction rotation is applied to get to an application's requested
+          orientation is reversed.  Normally, the model is that landscape is
+@@ -323,7 +323,7 @@
+     <!-- Control whether being in the desk dock should enable accelerometer
+          based screen orientation.  Note this should probably default to true
+          like car dock, but we haven't had a chance to test it. -->
+-    <bool name="config_deskDockEnablesAccelerometer">false</bool>
++    <bool name="config_deskDockEnablesAccelerometer">true</bool>
+ 
+     <!-- Control whether being in the car dock should enable accelerometer based
+          screen orientation.  This defaults to true because putting a device in
+@@ -350,7 +350,7 @@
+     <integer name="config_longPressOnPowerBehavior">1</integer>
+ 
+     <!-- Indicate whether the SD card is accessible without removing the battery. -->
+-    <bool name="config_batterySdCardAccessibility">false</bool>
++    <bool name="config_batterySdCardAccessibility">true</bool>
+ 
+     <!-- List of file paths for USB host busses to exclude from USB host support.
+          For example, if the first USB bus on the device is used to communicate
+@@ -442,7 +442,7 @@
+     <integer name="config_notificationsBatteryLedOn">125</integer>
+ 
+     <!-- Is the notification LED intrusive? Used to decide if there should be a disable option -->
+-    <bool name="config_intrusiveNotificationLed">false</bool>
++    <bool name="config_intrusiveNotificationLed">true</bool>
+ 
+     <!-- Default value for LED off time when the battery is low on charge in miliseconds -->
+     <integer name="config_notificationsBatteryLedOff">2875</integer>
+@@ -451,10 +451,10 @@
+     <bool name="config_disableMenuKeyInLockScreen">false</bool>
+ 
+     <!-- Don't show lock screen before unlock screen (PIN/pattern/password) -->
+-    <bool name="config_enableLockBeforeUnlockScreen">false</bool>
++    <bool name="config_enableLockBeforeUnlockScreen">true</bool>
+ 
+     <!-- Diable lockscreen rotation by default -->
+-    <bool name="config_enableLockScreenRotation">false</bool>
++    <bool name="config_enableLockScreenRotation">true</bool>
+ 
+     <!-- Enable puk unlockscreen by default.
+          If unlock screen is disabled, the puk should be unlocked through Emergency Dialer -->
+@@ -636,18 +636,18 @@
+ 
+     <!-- Sets whether menu shortcuts should be displayed on panel menus when
+          a keyboard is present. -->
+-    <bool name="config_showMenuShortcutsWhenKeyboardPresent">false</bool>
++    <bool name="config_showMenuShortcutsWhenKeyboardPresent">true</bool>
+ 
+     <!-- Do not translate. Defines the slots is Two Digit Number for dialing normally not USSD -->
+     <string-array name="config_twoDigitNumberPattern" translatable="false">
+     </string-array>
+ 
+     <!-- The VoiceMail default value is displayed to my own number if it is true -->
+-    <bool name="config_telephony_use_own_number_for_voicemail">false</bool>
++    <bool name="config_telephony_use_own_number_for_voicemail">true</bool>
+ 
+     <!-- If this value is true, Sms encoded as octet is decoded by utf8 decoder.
+          If false, decoded by Latin decoder. -->
+-    <bool name="config_sms_utf8_support">false</bool>
++    <bool name="config_sms_utf8_support">true</bool>
+ 
+     <!-- If this value is true, The mms content-disposition field is supported correctly.
+          If false, Content-disposition fragments are ignored -->
+@@ -694,7 +694,7 @@
+     <integer-array name="config_sms_enabled_locking_shift_tables"></integer-array>
+ 
+     <!-- Set to true if the RSSI should always display CDMA signal strength even on EVDO -->
+-    <bool name="config_alwaysUseCdmaRssi">false</bool>
++    <bool name="config_alwaysUseCdmaRssi">true</bool>
+ 
+ 
+     <!-- If this value is true, duplicate Source/Destination port fields
+@@ -702,7 +702,7 @@
+          ex: MSGTYPE-TotalSegments-CurrentSegment
+              -SourcePortDestPort-SourcePortDestPort-OMADM PDU
+          If false, not supported. -->
+-    <bool name="config_duplicate_port_omadm_wappush">false</bool>
++    <bool name="config_duplicate_port_omadm_wappush">true</bool>
+ 
+     <!-- Maximum numerical value that will be shown in a status bar
+          notification icon or in the notification itself. Will be replaced
+@@ -726,7 +726,7 @@
+     <!-- Whether action menu items should obey the "withText" showAsAction
+          flag. This may be set to false for situations where space is
+          extremely limited. -->
+-    <bool name="config_allowActionMenuItemTextWithIcon">false</bool>
++    <bool name="config_allowActionMenuItemTextWithIcon">true</bool>
+ 
+     <!-- Remote server that can provide NTP responses. -->
+     <string translatable="false" name="config_ntpServer">pool.ntp.org</string>
+@@ -737,7 +737,7 @@
+     <integer name="config_networkPolicyDefaultWarning">2048</integer>
+ 
+     <!-- Set and Unsets WiMAX -->
+-    <bool name="config_wimaxEnabled">false</bool>
++    <bool name="config_wimaxEnabled">true</bool>
+     <!-- Location of the wimax framwork jar location -->
+     <string name="config_wimaxServiceJarLocation" translatable="false"></string>
+     <!-- Location of the wimax native library locaiton -->
+diff --git a/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java b/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java
+index 724679f3..a5043e48 100644
+--- a/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java
++++ b/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java
+@@ -64,22 +64,12 @@ public class ImageWallpaper extends WallpaperService {
+ 
+     WallpaperManager mWallpaperManager;
+ 
+-    boolean mIsHwAccelerated;
++    final boolean mIsHwAccelerated = false;
+ 
+     @Override
+     public void onCreate() {
+         super.onCreate();
+         mWallpaperManager = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);
+-
+-        //noinspection PointlessBooleanExpression,ConstantConditions
+-        if (FIXED_SIZED_SURFACE && USE_OPENGL) {
+-            if (!isEmulator()) {
+-                WindowManager windowManager =
+-                        (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+-                Display display = windowManager.getDefaultDisplay();
+-                mIsHwAccelerated = ActivityManager.isHighEndGfx(display);
+-            }
+-        }
+     }
+ 
+     private static boolean isEmulator() {
+
+project hardware/libhardware/
+diff --git a/hardware/libhardware/modules/gralloc/framebuffer.cpp b/hardware/libhardware/modules/gralloc/framebuffer.cpp
+index f908976..ed22b78 100644
+--- a/hardware/libhardware/modules/gralloc/framebuffer.cpp
++++ b/hardware/libhardware/modules/gralloc/framebuffer.cpp
+@@ -334,9 +334,7 @@ int fb_device_open(hw_module_t const* module, const char* name,
+         status = mapFrameBuffer(m);
+         if (status >= 0) {
+             int stride = m->finfo.line_length / (m->info.bits_per_pixel >> 3);
+-            int format = (m->info.bits_per_pixel == 32)
+-                         ? HAL_PIXEL_FORMAT_RGBX_8888
+-                         : HAL_PIXEL_FORMAT_RGB_565;
++            int format = HAL_PIXEL_FORMAT_BGRA_8888;
+             const_cast<uint32_t&>(dev->device.flags) = 0;
+             const_cast<uint32_t&>(dev->device.width) = m->info.xres;
+             const_cast<uint32_t&>(dev->device.height) = m->info.yres;
+
+project system/core/
+diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
+index 840faa5..c63c317 100644
+--- a/system/core/rootdir/init.rc
++++ b/system/core/rootdir/init.rc
+@@ -6,6 +6,10 @@ on early-init
+ 
+ # create mountpoints
+     mkdir /mnt 0775 root system
++    export EXTERNAL_STORAGE /mnt/sdcard
++    mkdir /mnt/sdcard 0000 system system
++    # for backwards compatibility
++    symlink /mnt/sdcard /sdcard
+ 
+ on init
+ 
+@@ -60,7 +64,7 @@ loglevel 3
+     mkdir /mnt/obb 0700 root system
+     mount tmpfs tmpfs /mnt/obb mode=0755,gid=1000
+ 
+-    write /proc/sys/kernel/panic_on_oops 1
++    write /proc/sys/kernel/panic_on_oops 0
+     write /proc/sys/kernel/hung_task_timeout_secs 0
+     write /proc/cpu/alignment 4
+     write /proc/sys/kernel/sched_latency_ns 10000000
+@@ -92,17 +96,9 @@ loglevel 3
+ # This is needed by any process that uses socket tagging.
+     chmod 0644 /dev/xt_qtaguid
+ 
+-on fs
+-# mount mtd partitions
+-    # Mount /system rw first to give the filesystem a chance to save a checkpoint
+-    mount yaffs2 mtd@system /system
+-    mount yaffs2 mtd@system /system ro remount
+-    mount yaffs2 mtd@userdata /data nosuid nodev
+-    mount yaffs2 mtd@cache /cache nosuid nodev
+-
+ on post-fs
+     # once everything is setup, no need to modify /
+-    mount rootfs rootfs / ro remount
++    mount rootfs rootfs / rw remount
+ 
+     # We chown/chmod /cache again so because mount is run as root + defaults
+     chown system cache /cache
+@@ -160,6 +156,7 @@ on post-fs-data
+     mkdir /data/local 0751 root root
+     mkdir /data/local/tmp 0771 shell shell
+     mkdir /data/data 0771 system system
++    mkdir /data/system 0771 system system
+     mkdir /data/app-private 0771 system system
+     mkdir /data/app 0771 system system
+     mkdir /data/property 0700 root root

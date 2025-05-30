@@ -6,6 +6,8 @@
 SSH="ssh root@169.254.8.1"
 
 show_warning () {
+  clear
+
   echo "Leapster flash utility - installs a custom OS on your leapster!"
   echo
   echo "WARNING! This utility will ERASE the stock leapster OS and any other"
@@ -24,21 +26,19 @@ show_machinelist () {
   echo "----------------------------------------------------------------"
   echo "What type of system would you like to flash?"
   echo
-  echo "1. LF1000-Didj (Didj with EmeraldBoot)"
-  echo "2. LF1000 (Leapster Explorer)"
-  echo "3. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra XDI)"
-  echo "4. [EXPERIMENTAL] LF2000 w/ RT+OC Kernel (Leapster GS, LeapPad 2, LeapPad Ultra XDI)"
-  echo "5. LF3000 (LeapPad 3, LeapPad Platinum)"
+  echo "1. LF1000 (Leapster Explorer, Didj, LeapPad Explorer)"
+  echo "2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)"
+  echo "3. LF3000 (LeapPad 3, LeapPad Platinum)"
 }
 
 boot_surgeon () {
   surgeon_path=$1
   memloc=$2
   echo "Booting the Surgeon environment..."
-  python2 make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf
-  python2 boot_surgeon.py surgeon_tmp.cbf
+  python make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf
+  python boot_surgeon.py surgeon_tmp.cbf
   echo -n "Done! Waiting for Surgeon to come up..."
-  rm surgeon_tmp.cbf
+  rm -rf surgeon_tmp.cbf
   sleep 15
   echo "Done!"
 }
@@ -76,17 +76,7 @@ nand_flash_bulk () {
   cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
   ${SSH} "/usr/sbin/ubidetach -d 0"
-  sleep 3
   echo "Done flashing the root filesystem!"
-}
-
-nand_wipe_rfs () {
-  ${SSH} "/usr/sbin/ubiformat $RFS_PARTITION"
-  ${SSH} "/usr/sbin/ubiattach -p $RFS_PARTITION"
-  sleep 1
-  ${SSH} "/usr/sbin/ubimkvol /dev/ubi0 -N RFS -m"
-  ${SSH} "/usr/sbin/ubidetach -d 0"
-  sleep 3
 }
 
 flash_nand () {
@@ -94,7 +84,7 @@ flash_nand () {
   if [[ $prefix == lf1000_* ]]; then
 	  memloc="high"
 	  kernel="zImage_tmp.cbf"
-	  python2 make_cbf.py $memloc ${prefix}zImage $kernel
+	  python make_cbf.py $memloc ${prefix}zImage $kernel
   else
 	  memloc="superhigh"
 	  kernel=${prefix}uImage
@@ -105,7 +95,6 @@ flash_nand () {
   nand_part_detect
   nand_flash_kernel $kernel
   nand_flash_bulk rootfs.tar.gz
-  nand_wipe_rfs 
   echo "Done! Rebooting the host."
   ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
 }
@@ -126,14 +115,13 @@ mmc_flash_bulk () {
   bulk_path=$1
   # Size of the rootfs to be flashed, in bytes.
   echo -n "Flashing the root filesystem..."
-  ${SSH} "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p3"
+  ${SSH} "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
   # TODO: This directory structure should be included in surgeon images.
   ${SSH} "mkdir /mnt/root"
-  ${SSH} "mount -t ext4 /dev/mmcblk0p3 /mnt/root"
+  ${SSH} "mount -t ext4 /dev/mmcblk0p4 /mnt/root"
   echo "Writing rootfs image..."  
   cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
-  sleep 3
   echo "Done flashing the root filesystem!"
 }
 
@@ -153,19 +141,17 @@ prefix=$1
 if [ -z "$prefix" ]
 then
   show_machinelist
-  read -p "Enter choice (1 - 5)" choice
+  read -p "Enter choice (1 - 3)" choice
   case $choice in
-    1) prefix="lf1000_didj_" ;;
-    2) prefix="lf1000_" ;;
-    3) prefix="lf2000_" ;;
-    4) prefix="lf2000_rt_" ;;
-    5) prefix="lf3000_" ;;
-    *) echo -e "Unknown choice!" && sleep 2
+    1) prefix="lf1000_" ;;
+    2) prefix="lf2000_" ;;
+    3) prefix="lf3000_" ;;
+    *) echo -e "Unknown choice!" && exit 1
   esac
 fi
 
 if [ $prefix == "lf3000_" ]; then
 	flash_mmc $prefix
 else
-        flash_nand $prefix
+	flash_nand $prefix
 fi
