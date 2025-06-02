@@ -2231,7 +2231,7 @@ index 995a5d7..44c83b9 100644
  LOCAL_SRC_FILES:= \
    gl_code.cpp
 diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
-index 818774d..6ab11da 100644
+index 818774d..f6baeef 100644
 --- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
 +++ b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
 @@ -96,6 +96,31 @@ PixelFormat DisplayHardware::getFormat() const  { return mFormat; }
@@ -2240,14 +2240,14 @@ index 818774d..6ab11da 100644
  
 +static status_t selectConfigForPixelFormat(
 +        EGLDisplay dpy,
-+        EGLint const* attrs,
++        EGLint * attrs,
 +        PixelFormat format,
 +        EGLConfig* outConfig)
 +{
 +    EGLConfig config = NULL;
 +    EGLint numConfigs = -1, n=0;
 +    eglGetConfigs(dpy, NULL, 0, &numConfigs);
-+    EGLConfig* const configs = new EGLConfig[numConfigs];
++    EGLConfig* configs = new EGLConfig[numConfigs];
 +    eglChooseConfig(dpy, attrs, configs, numConfigs, &n);
 +    for (int i=0 ; i<n ; i++) {
 +        EGLint nativeVisualId = 0;
@@ -2271,7 +2271,7 @@ index 818774d..6ab11da 100644
  
      mOverlayEngine = NULL;
 +    int format;
-+    ANativeWindow const * const window = mNativeWindow.get();
++    ANativeWindow * window = mNativeWindow.get();
 +    window->query(window, NATIVE_WINDOW_FORMAT, &format);
      hw_module_t const* module;
      if (hw_get_module(OVERLAY_HARDWARE_MODULE_ID, &module) == 0) {
@@ -2385,20 +2385,19 @@ index 4d5a957..1d35668 100644
 
 project hardware/libhardware/
 diff --git a/hardware/libhardware/modules/gralloc/framebuffer.cpp b/hardware/libhardware/modules/gralloc/framebuffer.cpp
-index fe57a8a..4e0330e 100644
+index fe57a8a..4b82f01 100644
 --- a/hardware/libhardware/modules/gralloc/framebuffer.cpp
 +++ b/hardware/libhardware/modules/gralloc/framebuffer.cpp
-@@ -354,12 +354,7 @@ int fb_device_open(hw_module_t const* module, const char* name,
-         status = mapFrameBuffer(m);
+@@ -355,11 +355,8 @@ int fb_device_open(hw_module_t const* module, const char* name,
          if (status >= 0) {
              int stride = m->finfo.line_length / (m->info.bits_per_pixel >> 3);
--            int format = (m->info.bits_per_pixel == 32)
+             int format = (m->info.bits_per_pixel == 32)
 -                         ? HAL_PIXEL_FORMAT_RGBX_8888
--                         : HAL_PIXEL_FORMAT_RGB_565;
++                         ? (m->info.red.offset ? HAL_PIXEL_FORMAT_BGRA_8888 : HAL_PIXEL_FORMAT_RGBX_8888)
+                          : HAL_PIXEL_FORMAT_RGB_565;
 -#ifdef NO_32BPP
 -            format = HAL_PIXEL_FORMAT_RGB_565;
 -#endif
-+            int format = HAL_PIXEL_FORMAT_BGRA_8888;
              const_cast<uint32_t&>(dev->device.flags) = 0;
              const_cast<uint32_t&>(dev->device.width) = m->info.xres;
              const_cast<uint32_t&>(dev->device.height) = m->info.yres;
