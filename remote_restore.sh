@@ -65,7 +65,7 @@ restore_nand () {
   boot_surgeon ${prefix}surgeon_zImage $memloc
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   nand_part_detect
-  for mtd in $(ssh root@169.254.8.1 "ls /dev/mtd*"); do echo $mtd; ubi=$(basename $mtd); echo $ubi; dd status=progress if=$prefix$ubi | ssh root@169.254.8.1 "dd of=$mtd"; done
+  for mtd in $(${SSH} "ls /dev/mtd*"); do echo $mtd; ubi=$(basename $mtd); echo "$prefix$ubi -> /dev/$ubi"; dd status=progress if=$prefix$ubi | ${SSH} "dd of=$mtd"; done
   echo "Done! Rebooting your LeapFrog Device."
   ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 }
@@ -75,7 +75,7 @@ restore_mmc () {
   prefix=$1
   boot_surgeon ${prefix}surgeon_zImage superhigh
   ${SSH} -o "StrictHostKeyChecking no" 'test'
-  for mtd in $(ssh root@169.254.8.1 "ls /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo $ubi; dd status=progress if=$prefix$ubi | ssh root@169.254.8.1 "dd of=$mtd"; done
+  for mtd in $(${SSH} "ls /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo "$prefix$ubi -> /dev/$ubi"; dd status=progress if=$prefix$ubi | ${SSH} "dd of=$mtd"; done
   echo "Done! Rebooting your LeapFrog Device."
   ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 }

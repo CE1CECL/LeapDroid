@@ -107,7 +107,13 @@ EXIT /B 0
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
   %SSH% -o "StrictHostKeyChecking no" 'test'
   call :nand_part_detect
-  echo Backups and Restores support is Linux only for now. Sorry!
+  for /f %%m in ('%SSH% "ls /dev/mtd*"') do (
+    echo %%m
+    for %%u in (%%~nxm) do (
+        echo /dev/%%u -> %prefix:"=%%%u%
+        %SSH% "dd if=%%m" > %prefix:"=%%%u%
+    )
+  )
   echo Done! Rebooting your LeapFrog Device.
   %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 EXIT /B 0
@@ -116,7 +122,13 @@ EXIT /B 0
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
   %SSH% -o "StrictHostKeyChecking no" 'test'
-  echo Backups and Restores support is Linux only for now. Sorry!
+  for /f %%m in ('%SSH% "ls /dev/mmc*"') do (
+    echo %%m
+    for %%u in (%%~nxm) do (
+        echo /dev/%%u -> %prefix:"=%%%u%
+        %SSH% "dd if=%%m" > %prefix:"=%%%u%
+    )
+  )
   echo Done! Rebooting your LeapFrog Device.
   %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 EXIT /B 0
