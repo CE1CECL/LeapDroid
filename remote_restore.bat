@@ -9,13 +9,13 @@ echo Enter choice (1 - 3)
 SET /P REPLY=
 if /I "%REPLY%" == "1" (
 	set prefix="lf1000_"
-	call :flash_nand "lf1000_"
+	call :restore_nand "lf1000_"
 ) else if /I "%REPLY%" == "2" (
 	set prefix="lf2000_"
-	call :flash_nand "lf2000_"
+	call :restore_nand "lf2000_"
 ) else if /I "%REPLY%" == "3" (
 	set prefix="lf3000_"
-	call :flash_mmc "lf3000_"
+	call :restore_mmc "lf3000_"
 ) else (
 	echo Unknown choice!
 	pause
@@ -26,7 +26,7 @@ EXIT /B %ERRORLEVEL%
 
 :show_warning
 cls
-echo This Installs LeapDroid on your Leapster/LeapPad!
+echo This Restores your Backups on your Leapster/LeapPad!
 echo(
 echo WARNING! This utility will ERASE the stock LeapFrog OS and any other
 echo data on the device. The device can be restored to stock settings using
@@ -46,7 +46,7 @@ EXIT /B 0
 
 :show_machinelist
 echo ----------------------------------------------------------------
-echo What type of system would you like to flash?
+echo What type of system would you like to restore?
 echo(
 echo 1. LF1000 (Leapster Explorer, Didj, LeapPad Explorer)
 echo 2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)
@@ -83,33 +83,7 @@ EXIT /B 0
   echo "Detected Kernel partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%"
 EXIT /B 0
 
-:nand_flash_kernel
-  SET kernel_path=%~1
-  echo(
-  echo "Flashing the kernel...(%kernel_path%)
-  %SSH% "/usr/sbin/flash_erase %KERNEL_PARTITION% 0 0"
-  type %kernel_path% | %SSH% "/usr/sbin/nandwrite -p" %KERNEL_PARTITION% "-"
-  echo Done flashing the kernel!
-EXIT /B 0
-
-:nand_flash_bulk
-  SET bulk_path=%~1
-  echo Flashing the root filesystem...
-  %SSH% "/usr/sbin/ubiformat -y %BULK_PARTITION%"
-  %SSH% "/usr/sbin/ubiattach -p %BULK_PARTITION%"
-  TIMEOUT /NOBREAK /T 1
-  %SSH% "/usr/sbin/ubimkvol /dev/ubi0 -N Bulk -m"
-  TIMEOUT /NOBREAK /T 1
-  %SSH% "mount -t ubifs /dev/ubi0_0 /mnt/root"
-  echo Writing rootfs image...
-  type %bulk_path% | %SSH% "gunzip -c | tar x -f '-' -C /mnt/root"
-  %SSH% "umount /mnt/root"
-  %SSH% "/usr/sbin/ubidetach -d 0"
-  echo(
-  echo Done flashing the root filesystem!
-EXIT /B 0
-
-:flash_nand
+:restore_nand
   SET prefix=%~1
   if /I %prefix:"=% == lf1000_ (
     set memloc="high"
@@ -133,40 +107,16 @@ EXIT /B 0
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
   %SSH% -o "StrictHostKeyChecking no" 'test'
   call :nand_part_detect
-  call :nand_flash_kernel %kernel:"=%
-  call :nand_flash_bulk %rootfs:"=%
+  echo Backups and Restores support is Linux only for now. Sorry!
   echo Done! Rebooting your LeapFrog Device.
   %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 EXIT /B 0
 
-:mmc_flash_kernel
-  SET kernel_path=%~1
-  echo Flashing the kernel...
-  %SSH% "mkdir /mnt/boot"
-  %SSH% "mount /dev/mmcblk0p2 /mnt/boot"
-  type %kernel_path% | %SSH% "cat - > /mnt/boot/uImage"
-  %SSH% "umount /dev/mmcblk0p2"
-  echo Done flashing the kernel!
-EXIT /B 0
-
-:mmc_flash_bulk
-  SET bulk_path=%~1
-  echo Flashing the root filesystem...
-  %SSH% "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
-  %SSH% "mkdir /mnt/root"
-  %SSH% "mount -t ext4 /dev/mmcblk0p4 /mnt/root"
-  echo Writing rootfs image... 
-  type %bulk_path% | %SSH% "gunzip -c | tar x -f '-' -C /mnt/root"
-  %SSH% "umount /mnt/root"
-  echo Done flashing the root filesystem!
-EXIT /B 0
-
-:flash_mmc
+:restore_mmc
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
   %SSH% -o "StrictHostKeyChecking no" 'test'
-  call :mmc_flash_kernel %prefix%uImage
-  call :mmc_flash_bulk rootfs.tar.gz
+  echo Backups and Restores support is Linux only for now. Sorry!
   echo Done! Rebooting your LeapFrog Device.
   %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 EXIT /B 0
