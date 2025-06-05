@@ -114,10 +114,10 @@ index 9ab607a..5a0b549 100644
 -USE_CAMERA_STUB := true
 +USE_CAMERA_STUB := false
 diff --git a/build/target/board/generic/BoardConfig.mk b/build/target/board/generic/BoardConfig.mk
-index 70f8585..2cd9a26 100644
+index 70f8585..65b3101 100644
 --- a/build/target/board/generic/BoardConfig.mk
 +++ b/build/target/board/generic/BoardConfig.mk
-@@ -21,6 +21,12 @@ TARGET_NO_KERNEL := true
+@@ -21,9 +21,14 @@ TARGET_NO_KERNEL := true
  TARGET_ARCH_VARIANT := armv7-a
  TARGET_CPU_ABI := armeabi-v7a
  TARGET_CPU_ABI2 := armeabi
@@ -128,9 +128,13 @@ index 70f8585..2cd9a26 100644
 +ARCH_ARM_HAVE_VFP := true
 +ARCH_ARM_HAVE_VFP_D32 := false
  
- HAVE_HTC_AUDIO_DRIVER := true
- BOARD_USES_GENERIC_AUDIO := true
-@@ -35,4 +41,4 @@ WITH_DEXPREOPT := true
+-HAVE_HTC_AUDIO_DRIVER := true
+-BOARD_USES_GENERIC_AUDIO := true
++BOARD_USES_GENERIC_AUDIO := false
+ 
+ # no hardware camera
+ USE_CAMERA_STUB := true
+@@ -35,4 +40,4 @@ WITH_DEXPREOPT := true
  endif
  
  # Build OpenGLES emulation guest and host libraries
@@ -153,10 +157,10 @@ index d8fa2fe..21a6b2d 100644
  
  WITH_DEXPREOPT := false
 diff --git a/build/target/board/generic_x86/BoardConfig.mk b/build/target/board/generic_x86/BoardConfig.mk
-index 9826973..3820a40 100644
+index 9826973..e7ea787 100644
 --- a/build/target/board/generic_x86/BoardConfig.mk
 +++ b/build/target/board/generic_x86/BoardConfig.mk
-@@ -8,7 +8,7 @@ TARGET_NO_BOOTLOADER := true
+@@ -8,12 +8,10 @@ TARGET_NO_BOOTLOADER := true
  TARGET_NO_KERNEL := true
  TARGET_CPU_ABI := x86
  TARGET_ARCH := x86
@@ -164,8 +168,14 @@ index 9826973..3820a40 100644
 +TARGET_ARCH_VARIANT := x86
  TARGET_PRELINK_MODULE := false
  
- # The IA emulator (qemu) uses the Goldfish devices
-@@ -27,4 +27,4 @@ ifeq ($(HOST_OS),linux)
+-# The IA emulator (qemu) uses the Goldfish devices
+-HAVE_HTC_AUDIO_DRIVER := true
+-BOARD_USES_GENERIC_AUDIO := true
++BOARD_USES_GENERIC_AUDIO := false
+ 
+ # no hardware camera
+ USE_CAMERA_STUB := true
+@@ -27,4 +25,4 @@ ifeq ($(HOST_OS),linux)
  WITH_DEXPREOPT := true
  endif
  # Build OpenGLES emulation host and guest libraries
@@ -188,6 +198,26 @@ index c563bcc..be2ccf0 100644
 +PRODUCT_DEVICE := generic_armv5
  PRODUCT_BRAND := Android
  PRODUCT_MODEL := Full Android on Emulator
+
+project device/samsung/crespo/
+diff --git a/device/samsung/crespo/libaudio/Android.mk b/device/samsung/crespo/libaudio/Android.mk
+index 726859b..43f2ad8 100644
+--- a/device/samsung/crespo/libaudio/Android.mk
++++ b/device/samsung/crespo/libaudio/Android.mk
+@@ -1,7 +1,5 @@
+ LOCAL_PATH:= $(call my-dir)
+ 
+-ifneq ($(filter crespo crespo4g,$(TARGET_DEVICE)),)
+-
+ include $(CLEAR_VARS)
+ LOCAL_SRC_FILES:= aplay.c alsa_pcm.c alsa_mixer.c
+ LOCAL_MODULE:= aplay
+@@ -49,5 +47,3 @@ ifeq ($(BOARD_HAVE_BLUETOOTH),true)
+   LOCAL_CFLAGS += -DWITH_A2DP
+ endif
+ include $(BUILD_SHARED_LIBRARY)
+-
+-endif
 
 project frameworks/base/
 diff --git a/frameworks/base/core/res/res/values/config.xml b/frameworks/base/core/res/res/values/config.xml

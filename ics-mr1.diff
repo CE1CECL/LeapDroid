@@ -114,10 +114,10 @@ index 9ab607a..5a0b549 100644
 -USE_CAMERA_STUB := true
 +USE_CAMERA_STUB := false
 diff --git a/build/target/board/generic/BoardConfig.mk b/build/target/board/generic/BoardConfig.mk
-index 57e60d3..e66bd7a 100644
+index 57e60d3..2c67afe 100644
 --- a/build/target/board/generic/BoardConfig.mk
 +++ b/build/target/board/generic/BoardConfig.mk
-@@ -21,12 +21,18 @@ TARGET_NO_KERNEL := true
+@@ -21,12 +21,17 @@ TARGET_NO_KERNEL := true
  TARGET_ARCH_VARIANT := armv7-a
  TARGET_CPU_ABI := armeabi-v7a
  TARGET_CPU_ABI2 := armeabi
@@ -128,8 +128,9 @@ index 57e60d3..e66bd7a 100644
 +ARCH_ARM_HAVE_VFP := true
 +ARCH_ARM_HAVE_VFP_D32 := false
  
- HAVE_HTC_AUDIO_DRIVER := true
- BOARD_USES_GENERIC_AUDIO := true
+-HAVE_HTC_AUDIO_DRIVER := true
+-BOARD_USES_GENERIC_AUDIO := true
++BOARD_USES_GENERIC_AUDIO := false
  
  # no hardware camera
 -USE_CAMERA_STUB := true
@@ -137,7 +138,7 @@ index 57e60d3..e66bd7a 100644
  
  # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
  TARGET_SHELL := ash
-@@ -38,8 +44,8 @@ WITH_DEXPREOPT := true
+@@ -38,8 +43,8 @@ WITH_DEXPREOPT := true
  endif
  
  # Build OpenGLES emulation guest and host libraries
@@ -165,10 +166,10 @@ index d8fa2fe..21a6b2d 100644
  
  WITH_DEXPREOPT := false
 diff --git a/build/target/board/generic_x86/BoardConfig.mk b/build/target/board/generic_x86/BoardConfig.mk
-index c62b0a4..38a23b0 100644
+index c62b0a4..2e9d9a6 100644
 --- a/build/target/board/generic_x86/BoardConfig.mk
 +++ b/build/target/board/generic_x86/BoardConfig.mk
-@@ -8,7 +8,7 @@ TARGET_NO_BOOTLOADER := true
+@@ -8,15 +8,13 @@ TARGET_NO_BOOTLOADER := true
  TARGET_NO_KERNEL := true
  TARGET_CPU_ABI := x86
  TARGET_ARCH := x86
@@ -176,9 +177,10 @@ index c62b0a4..38a23b0 100644
 +TARGET_ARCH_VARIANT := x86
  TARGET_PRELINK_MODULE := false
  
- # The IA emulator (qemu) uses the Goldfish devices
-@@ -16,7 +16,7 @@ HAVE_HTC_AUDIO_DRIVER := true
- BOARD_USES_GENERIC_AUDIO := true
+-# The IA emulator (qemu) uses the Goldfish devices
+-HAVE_HTC_AUDIO_DRIVER := true
+-BOARD_USES_GENERIC_AUDIO := true
++BOARD_USES_GENERIC_AUDIO := false
  
  # no hardware camera
 -USE_CAMERA_STUB := true
@@ -186,7 +188,7 @@ index c62b0a4..38a23b0 100644
  
  # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
  TARGET_SHELL := ash
-@@ -28,8 +28,8 @@ WITH_DEXPREOPT := true
+@@ -28,8 +26,8 @@ WITH_DEXPREOPT := true
  endif
  
  # Build OpenGLES emulation host and guest libraries
@@ -227,6 +229,30 @@ index 0f1956b..a328133 100644
 +PRODUCT_DEVICE := generic_armv5
  PRODUCT_BRAND := Android
  PRODUCT_MODEL := Full Android on Emulator
+
+project device/samsung/crespo/
+diff --git a/device/samsung/crespo/libaudio/Android.mk b/device/samsung/crespo/libaudio/Android.mk
+index cbb925c..3ae0588 100644
+--- a/device/samsung/crespo/libaudio/Android.mk
++++ b/device/samsung/crespo/libaudio/Android.mk
+@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
+ LOCAL_SRC_FILES:= \
+ 	AudioHardware.cpp
+ 
+-LOCAL_MODULE := audio.primary.herring
++LOCAL_MODULE := audio.primary.default
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_STATIC_LIBRARIES:= libmedia_helper
+ LOCAL_SHARED_LIBRARIES:= \
+@@ -30,7 +30,7 @@ LOCAL_SRC_FILES := AudioPolicyManager.cpp
+ LOCAL_SHARED_LIBRARIES := libcutils libutils libmedia
+ LOCAL_STATIC_LIBRARIES := libmedia_helper
+ LOCAL_WHOLE_STATIC_LIBRARIES := libaudiopolicy_legacy
+-LOCAL_MODULE := audio_policy.herring
++LOCAL_MODULE := audio_policy.default
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_MODULE_TAGS := optional
+ 
 
 project external/webrtc/
 diff --git a/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h b/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h
@@ -610,6 +636,19 @@ index f94d3214..2a463544 100644
      mDpiY = mNativeWindow->ydpi;
 
 project hardware/libhardware/
+diff --git a/hardware/libhardware/modules/audio/Android.mk b/hardware/libhardware/modules/audio/Android.mk
+index f773079..5f57b7b 100644
+--- a/hardware/libhardware/modules/audio/Android.mk
++++ b/hardware/libhardware/modules/audio/Android.mk
+@@ -22,7 +22,7 @@ LOCAL_PATH := $(call my-dir)
+ # required type is 'primary'. Other possibilites are 'a2dp', 'usb', etc.
+ include $(CLEAR_VARS)
+ 
+-LOCAL_MODULE := audio.primary.default
++LOCAL_MODULE := audio.primary.herring
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_SRC_FILES := audio_hw.c
+ LOCAL_SHARED_LIBRARIES := liblog libcutils
 diff --git a/hardware/libhardware/modules/gralloc/framebuffer.cpp b/hardware/libhardware/modules/gralloc/framebuffer.cpp
 index f908976..62521ac 100644
 --- a/hardware/libhardware/modules/gralloc/framebuffer.cpp
@@ -623,6 +662,21 @@ index f908976..62521ac 100644
                           : HAL_PIXEL_FORMAT_RGB_565;
              const_cast<uint32_t&>(dev->device.flags) = 0;
              const_cast<uint32_t&>(dev->device.width) = m->info.xres;
+
+project hardware/libhardware_legacy/
+diff --git a/hardware/libhardware_legacy/audio/Android.mk b/hardware/libhardware_legacy/audio/Android.mk
+index ef41374..7533fd9 100644
+--- a/hardware/libhardware_legacy/audio/Android.mk
++++ b/hardware/libhardware_legacy/audio/Android.mk
+@@ -59,7 +59,7 @@ LOCAL_STATIC_LIBRARIES := \
+ LOCAL_WHOLE_STATIC_LIBRARIES := \
+     libaudiopolicy_legacy
+ 
+-LOCAL_MODULE := audio_policy.default
++LOCAL_MODULE := audio_policy.herring
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_MODULE_TAGS := optional
+ 
 
 project packages/apps/Launcher2/
 diff --git a/packages/apps/Launcher2/res/values/config.xml b/packages/apps/Launcher2/res/values/config.xml
