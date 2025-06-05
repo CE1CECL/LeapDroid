@@ -122,7 +122,7 @@ EXIT /B 0
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
   %SSH% -o "StrictHostKeyChecking no" 'test'
-  for /f %%m in ('%SSH% "ls /dev/mtd*"') do (
+  for /f %%m in ('%SSH% "ls /dev/mmc*"') do (
     echo %%m
     for %%u in (%%~nxm) do (
         echo %prefix:"=%%%u% -> /dev/%%u 
