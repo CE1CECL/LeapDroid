@@ -1,25 +1,25 @@
 #!/bin/bash
 
-# We use a public/private keypair to authenticate. 
-# Surgeon uses the 169.254.8.X subnet to differentiate itself from
-# a fully booted system for safety purposes.
 SSH="ssh root@169.254.8.1"
 
 show_warning () {
   clear
-
-  echo "Leapster flash utility - installs a custom OS on your leapster!"
+  echo "This Installs LeapDroid on your Leapster/LeapPad!"
   echo
-  echo "WARNING! This utility will ERASE the stock leapster OS and any other"
+  echo "WARNING! This utility will ERASE the stock LeapFrog OS and any other"
   echo "data on the device. The device can be restored to stock settings using"
   echo "the LeapFrog Connect app. Note that flashing your device will likely"
   echo "VOID YOUR WARRANTY! Proceed at your own risk."
   echo
-  echo "Please power off your leapster, hold the L + R shoulder buttons (LeapsterGS), "
-  echo "or right arrow + home buttons (LeapPad2), and then press power."
-  echo "You should see a screen with a green background."
-
-  read -p "Press enter when you're ready to continue."
+  echo "Please power off your device, and do the following -"
+  echo
+  echo "Leapster Explorer - Hold the L + R shoulder buttons AND the Hint (?) button whilst powering on"
+  echo "Leapster GS - Hold the L + R shoulder buttons whilst powering on "
+  echo "LeapPad - Hold the Right arrow + Home buttons AND the Volume Down button whilst powering on."
+  echo
+  echo "You should see a screen with a green or blue background and a picture of the device"
+  echo "connecting to a computer."
+  read -p "Press ENTER when you're ready to continue."
 }
 
 show_machinelist () {
@@ -44,8 +44,6 @@ boot_surgeon () {
 }
 
 nand_part_detect () {
-  # Probe for filesystem partition locations, they can vary based on kernel version + presence of NOR flash drivers.
-  # TODO: Make the escaping less yucky...
   KERNEL_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Kernel\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   RFS_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"RFS\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   Bulk_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Bulk\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
@@ -69,9 +67,6 @@ nand_flash_bulk () {
   ${SSH} "/usr/sbin/ubimkvol /dev/ubi0 -N Bulk -m"
   sleep 1
   ${SSH} "mount -t ubifs /dev/ubi0_0 /mnt/root"
-  # Note: We used to use a ubifs image here, but now use a .tar.gz.
-  # This removes the need to care about PEB/LEB sizes at build time,
-  # which is important as some LF2000 models (Ultra XDi) have differing sizes.
   echo "Writing rootfs image..."  
   cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
   ${SSH} "umount /mnt/root"
@@ -82,29 +77,28 @@ nand_flash_bulk () {
 flash_nand () {
   prefix=$1
   if [[ $prefix == lf1000_* ]]; then
+	  rootfs="lf1000_rootfs.tar.gz"
 	  memloc="high"
 	  kernel="zImage_tmp.cbf"
 	  python make_cbf.py $memloc ${prefix}zImage $kernel
   else
+	  rootfs="rootfs.tar.gz"
 	  memloc="superhigh"
 	  kernel=${prefix}uImage
   fi
   boot_surgeon ${prefix}surgeon_zImage $memloc
-  # For the first ssh command, skip hostkey checking to avoid prompting the user.
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   nand_part_detect
   nand_flash_kernel $kernel
-  nand_flash_bulk rootfs.tar.gz
-  echo "Done! Rebooting the host."
-  ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
+  nand_flash_bulk $rootfs
+  echo "Done! Rebooting your LeapFrog Device."
+  ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 }
 
 mmc_flash_kernel () {
   kernel_path=$1
   echo -n "Flashing the kernel..."
-  # TODO: This directory structure should be included in surgeon images.
   ${SSH} "mkdir /mnt/boot"
-  # TODO: This assumes a specific partition layout - not sure if this is the case for all devices?
   ${SSH} "mount /dev/mmcblk0p2 /mnt/boot"
   cat $kernel_path | ${SSH} "cat - > /mnt/boot/uImage"
   ${SSH} "umount /dev/mmcblk0p2"
@@ -113,10 +107,8 @@ mmc_flash_kernel () {
 
 mmc_flash_bulk () {
   bulk_path=$1
-  # Size of the rootfs to be flashed, in bytes.
   echo -n "Flashing the root filesystem..."
   ${SSH} "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
-  # TODO: This directory structure should be included in surgeon images.
   ${SSH} "mkdir /mnt/root"
   ${SSH} "mount -t ext4 /dev/mmcblk0p4 /mnt/root"
   echo "Writing rootfs image..."  
@@ -128,12 +120,11 @@ mmc_flash_bulk () {
 flash_mmc () {
   prefix=$1
   boot_surgeon ${prefix}surgeon_zImage superhigh
-  # For the first ssh command, skip hostkey checking to avoid prompting the user.
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   mmc_flash_kernel ${prefix}uImage
   mmc_flash_bulk rootfs.tar.gz
-  echo "Done! Rebooting the host."
-  ${SSH} '(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)'
+  echo "Done! Rebooting your LeapFrog Device."
+  ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 }
 
 show_warning
