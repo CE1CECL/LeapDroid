@@ -125,11 +125,16 @@ EXIT /B 0
     python make_cbf.py %memloc:"=% %prefix:"=%zImage %kernel:"=% || ^
     make_cbf.exe %memloc:"=% %prefix:"=%zImage %kernel:"=%
   )
+  if /I %prefix:"=% == lf1000_ (
+    set rootfs="lf1000_rootfs.tar.gz"
+  ) else (
+    set rootfs="rootfs.tar.gz"
+  )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
   %SSH% -o "StrictHostKeyChecking no" 'test'
   call :nand_part_detect
   call :nand_flash_kernel %kernel:"=%
-  call :nand_flash_bulk rootfs.tar.gz
+  call :nand_flash_bulk %rootfs:"=%
   echo Done! Rebooting the host.
   %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
 EXIT /B 0
