@@ -705,6 +705,26 @@ index f94d3214..2a463544 100644
      window->query(window, NATIVE_WINDOW_FORMAT, &format);
      mDpiX = mNativeWindow->xdpi;
      mDpiY = mNativeWindow->ydpi;
+diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
+index 3b7c09e8..b94e4d5c 100644
+--- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
++++ b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
+@@ -76,7 +76,6 @@ bool DisplayHardwareBase::DisplayEventThread::threadLoop()
+       err = read(fd, &buf, 1);
+     } while (err < 0 && errno == EINTR);
+     close(fd);
+-    LOGW_IF(err<0, "ANDROID_WAIT_FOR_FB_SLEEP failed (%s)", strerror(errno));
+     if (err >= 0) {
+         sp<SurfaceFlinger> flinger = mFlinger.promote();
+         LOGD("About to give-up screen, flinger = %p", flinger.get());
+@@ -91,7 +90,6 @@ bool DisplayHardwareBase::DisplayEventThread::threadLoop()
+       err = read(fd, &buf, 1);
+     } while (err < 0 && errno == EINTR);
+     close(fd);
+-    LOGW_IF(err<0, "ANDROID_WAIT_FOR_FB_WAKE failed (%s)", strerror(errno));
+     if (err >= 0) {
+         sp<SurfaceFlinger> flinger = mFlinger.promote();
+         LOGD("Screen about to return, flinger = %p", flinger.get());
 
 project hardware/libhardware/
 diff --git a/hardware/libhardware/modules/audio/Android.mk b/hardware/libhardware/modules/audio/Android.mk

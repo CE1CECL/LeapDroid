@@ -2373,6 +2373,26 @@ index 818774d..f6baeef 100644
  
      GLExtensions& extensions(GLExtensions::getInstance());
      extensions.initWithGLStrings(
+diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
+index 90865da..f6aca7b 100644
+--- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
++++ b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
+@@ -89,7 +89,6 @@ bool DisplayHardwareBase::DisplayEventThread::threadLoop()
+       err = read(fd, &buf, 1);
+     } while (err < 0 && errno == EINTR);
+     close(fd);
+-    LOGW_IF(err<0, "ANDROID_WAIT_FOR_FB_SLEEP failed (%s)", strerror(errno));
+     if (err >= 0) {
+         sp<SurfaceFlinger> flinger = mFlinger.promote();
+         LOGD("About to give-up screen, flinger = %p", flinger.get());
+@@ -104,7 +103,6 @@ bool DisplayHardwareBase::DisplayEventThread::threadLoop()
+       err = read(fd, &buf, 1);
+     } while (err < 0 && errno == EINTR);
+     close(fd);
+-    LOGW_IF(err<0, "ANDROID_WAIT_FOR_FB_WAKE failed (%s)", strerror(errno));
+     if (err >= 0) {
+         sp<SurfaceFlinger> flinger = mFlinger.promote();
+         LOGD("Screen about to return, flinger = %p", flinger.get());
 diff --git a/frameworks/base/tools/obbtool/Android.mk b/frameworks/base/tools/obbtool/Android.mk
 index d118bd7..28be625 100644
 --- a/frameworks/base/tools/obbtool/Android.mk
