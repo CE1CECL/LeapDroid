@@ -2132,6 +2132,32 @@ index 5a88fb3..6b10cc8 100644
  ifndef CONFIG_BACKEND
 
 project frameworks/base/
+diff --git a/frameworks/base/core/java/android/app/ActivityManager.java b/frameworks/base/core/java/android/app/ActivityManager.java
+index fe1e7d7..f3d4504 100644
+--- a/frameworks/base/core/java/android/app/ActivityManager.java
++++ b/frameworks/base/core/java/android/app/ActivityManager.java
+@@ -64,7 +64,7 @@ public class ActivityManager {
+     static public int staticGetMemoryClass() {
+         // Really brain dead right now -- just take this from the configured
+         // vm heap size, and assume it is in megabytes and thus ends with "m".
+-        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "16m");
++        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "24m");
+         return Integer.parseInt(vmHeapSize.substring(0, vmHeapSize.length()-1));
+     }
+     
+diff --git a/frameworks/base/core/jni/AndroidRuntime.cpp b/frameworks/base/core/jni/AndroidRuntime.cpp
+index d9759bf..e7819de 100644
+--- a/frameworks/base/core/jni/AndroidRuntime.cpp
++++ b/frameworks/base/core/jni/AndroidRuntime.cpp
+@@ -650,7 +650,7 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
+     //options[curOpt++].optionString = "-verbose:class";
+ 
+     strcpy(heapsizeOptsBuf, "-Xmx");
+-    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "16m");
++    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "24m");
+     //LOGI("Heap size: %s", heapsizeOptsBuf);
+     opt.optionString = heapsizeOptsBuf;
+     mOptions.add(opt);
 diff --git a/frameworks/base/core/res/res/values/config.xml b/frameworks/base/core/res/res/values/config.xml
 index 779028e..801a83e 100755
 --- a/frameworks/base/core/res/res/values/config.xml
@@ -5082,9 +5108,18 @@ index b095c87..9226c7b 100644
 
 project system/core/
 diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
-index 8227273..5c26a80 100644
+index 8227273..5ed2b1a 100644
 --- a/system/core/rootdir/init.rc
 +++ b/system/core/rootdir/init.rc
+@@ -5,7 +5,7 @@ on init
+ 
+ sysclktz 0
+ 
+-loglevel 3
++loglevel 0
+ 
+ # setup the global environment
+     export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
 @@ -62,7 +62,7 @@ loglevel 3
      mkdir /mnt/obb 0700 root system
      mount tmpfs tmpfs /mnt/obb mode=0755,gid=1000
