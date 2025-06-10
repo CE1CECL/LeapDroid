@@ -2133,7 +2133,7 @@ index 5a88fb3..6b10cc8 100644
 
 project frameworks/base/
 diff --git a/frameworks/base/core/java/android/app/ActivityManager.java b/frameworks/base/core/java/android/app/ActivityManager.java
-index fe1e7d7..f3d4504 100644
+index fe1e7d7..58ddb18 100644
 --- a/frameworks/base/core/java/android/app/ActivityManager.java
 +++ b/frameworks/base/core/java/android/app/ActivityManager.java
 @@ -64,7 +64,7 @@ public class ActivityManager {
@@ -2141,12 +2141,12 @@ index fe1e7d7..f3d4504 100644
          // Really brain dead right now -- just take this from the configured
          // vm heap size, and assume it is in megabytes and thus ends with "m".
 -        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "16m");
-+        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "24m");
++        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "10m");
          return Integer.parseInt(vmHeapSize.substring(0, vmHeapSize.length()-1));
      }
      
 diff --git a/frameworks/base/core/jni/AndroidRuntime.cpp b/frameworks/base/core/jni/AndroidRuntime.cpp
-index d9759bf..e7819de 100644
+index d9759bf..ebe7592 100644
 --- a/frameworks/base/core/jni/AndroidRuntime.cpp
 +++ b/frameworks/base/core/jni/AndroidRuntime.cpp
 @@ -650,7 +650,7 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
@@ -2154,7 +2154,7 @@ index d9759bf..e7819de 100644
  
      strcpy(heapsizeOptsBuf, "-Xmx");
 -    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "16m");
-+    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "24m");
++    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "10m");
      //LOGI("Heap size: %s", heapsizeOptsBuf);
      opt.optionString = heapsizeOptsBuf;
      mOptions.add(opt);
@@ -5128,7 +5128,7 @@ index b095c87..9226c7b 100644
 
 project system/core/
 diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
-index 8227273..5ed2b1a 100644
+index 8227273..86f54a1 100644
 --- a/system/core/rootdir/init.rc
 +++ b/system/core/rootdir/init.rc
 @@ -5,7 +5,7 @@ on init
@@ -5140,7 +5140,17 @@ index 8227273..5ed2b1a 100644
  
  # setup the global environment
      export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
-@@ -62,7 +62,7 @@ loglevel 3
+@@ -31,9 +31,7 @@ loglevel 3
+     mkdir /mnt 0775 root system
+     mkdir /mnt/sdcard 0000 system system
+ 
+-# Create cgroup mount point for cpu accounting
+     mkdir /acct
+-    mount cgroup none /acct cpuacct
+     mkdir /acct/uid
+ 
+ # Backwards Compat - XXX: Going away in G*
+@@ -62,7 +60,7 @@ loglevel 3
      mkdir /mnt/obb 0700 root system
      mount tmpfs tmpfs /mnt/obb mode=0755,gid=1000
  
@@ -5149,7 +5159,17 @@ index 8227273..5ed2b1a 100644
      write /proc/sys/kernel/hung_task_timeout_secs 0
      write /proc/cpu/alignment 4
      write /proc/sys/kernel/sched_latency_ns 10000000
-@@ -89,17 +89,9 @@ loglevel 3
+@@ -70,9 +68,7 @@ loglevel 3
+     write /proc/sys/kernel/sched_compat_yield 1
+     write /proc/sys/kernel/sched_child_runs_first 0
+ 
+-# Create cgroup mount points for process groups
+     mkdir /dev/cpuctl
+-    mount cgroup none /dev/cpuctl cpu
+     chown system system /dev/cpuctl
+     chown system system /dev/cpuctl/tasks
+     chmod 0777 /dev/cpuctl/tasks
+@@ -89,17 +85,9 @@ loglevel 3
      # 5.0 %
      write /dev/cpuctl/bg_non_interactive/cpu.shares 52
  
@@ -5168,7 +5188,7 @@ index 8227273..5ed2b1a 100644
  
      # We chown/chmod /data again so because mount is run as root + defaults
      chown system system /data
-@@ -156,6 +148,7 @@ on post-fs
+@@ -156,6 +144,7 @@ on post-fs
      chmod 0660 /data/misc/wifi/wpa_supplicant.conf
      mkdir /data/local 0771 shell shell
      mkdir /data/local/tmp 0771 shell shell
@@ -5176,7 +5196,21 @@ index 8227273..5ed2b1a 100644
      mkdir /data/data 0771 system system
      mkdir /data/app-private 0771 system system
      mkdir /data/app 0771 system system
-@@ -298,6 +291,8 @@ on property:ro.kernel.qemu=1
+@@ -278,13 +267,10 @@ on boot
+ ## Daemon processes to be run by init.
+ ##
+ service ueventd /sbin/ueventd
+-    critical
+ 
+ service console /system/bin/sh
+     console
+     disabled
+-    user shell
+-    group log
+ 
+ on property:ro.secure=0
+     start console
+@@ -298,16 +284,14 @@ on property:ro.kernel.qemu=1
      start adbd
  
  on property:persist.service.adb.enable=1
@@ -5185,6 +5219,99 @@ index 8227273..5ed2b1a 100644
      start adbd
  
  on property:persist.service.adb.enable=0
+     stop adbd
+ 
+ service servicemanager /system/bin/servicemanager
+-    user system
+-    critical
+-    onrestart restart zygote
+-    onrestart restart media
+ 
+ service vold /system/bin/vold
+     socket vold stream 0660 root mount
+@@ -321,61 +305,40 @@ service debuggerd /system/bin/debuggerd
+ service ril-daemon /system/bin/rild
+     socket rild stream 660 root radio
+     socket rild-debug stream 660 radio system
+-    user root
+-    group radio cache inet misc audio sdcard_rw
+ 
+ service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
+     socket zygote stream 666
+-    onrestart write /sys/android_power/request_state wake
+-    onrestart write /sys/power/state on
+-    onrestart restart media
+-    onrestart restart netd
+ 
+ service media /system/bin/mediaserver
+-    user media
+-    group system audio camera graphics inet net_bt net_bt_admin net_raw
+     ioprio rt 4
+ 
+ service bootanim /system/bin/bootanimation
+-    user graphics
+-    group graphics
+     disabled
+     oneshot
+ 
+ service dbus /system/bin/dbus-daemon --system --nofork
+     socket dbus stream 660 bluetooth bluetooth
+-    user bluetooth
+-    group bluetooth net_bt_admin
+ 
+ service bluetoothd /system/bin/bluetoothd -n
+     socket bluetooth stream 660 bluetooth bluetooth
+     socket dbus_bluetooth stream 660 bluetooth bluetooth
+     # init.rc does not yet support applying capabilities, so run as root and
+     # let bluetoothd drop uid to bluetooth with the right linux capabilities
+-    group bluetooth net_bt_admin misc
+     disabled
+ 
+ service hfag /system/bin/sdptool add --channel=10 HFAG
+-    user bluetooth
+-    group bluetooth net_bt_admin
+     disabled
+     oneshot
+ 
+ service hsag /system/bin/sdptool add --channel=11 HSAG
+-    user bluetooth
+-    group bluetooth net_bt_admin
+     disabled
+     oneshot
+ 
+ service opush /system/bin/sdptool add --channel=12 OPUSH
+-    user bluetooth
+-    group bluetooth net_bt_admin
+     disabled
+     oneshot
+ 
+ service pbap /system/bin/sdptool add --channel=19 PBAP
+-    user bluetooth
+-    group bluetooth net_bt_admin
+     disabled
+     oneshot
+ 
+@@ -388,20 +351,15 @@ service flash_recovery /system/etc/install-recovery.sh
+ service racoon /system/bin/racoon
+     socket racoon stream 600 system system
+     # racoon will setuid to vpn after getting necessary resources.
+-    group net_admin
+     disabled
+     oneshot
+ 
+ service mtpd /system/bin/mtpd
+     socket mtpd stream 600 system system
+-    user vpn
+-    group vpn net_admin net_raw
+     disabled
+     oneshot
+ 
+ service keystore /system/bin/keystore /data/misc/keystore
+-    user keystore
+-    group keystore
+     socket keystore stream 666
+ 
+ service dumpstate /system/bin/dumpstate -s
 
 project system/extras/
 diff --git a/system/extras/procrank/Android.mk b/system/extras/procrank/Android.mk
@@ -5200,3 +5327,30 @@ index be7c599..0b2d59a 100644
  
  LOCAL_SHARED_LIBRARIES := libpagemap
  
+diff --git a/system/extras/su/su.c b/system/extras/su/su.c
+index b87cece..4db0a19 100644
+--- a/system/extras/su/su.c
++++ b/system/extras/su/su.c
+@@ -42,7 +42,7 @@
+ int main(int argc, char **argv)
+ {
+     struct passwd *pw;
+-    int uid, gid, myuid;
++    int uid, gid;
+ 
+     if(argc < 2) {
+         uid = gid = 0;
+@@ -57,13 +57,6 @@ int main(int argc, char **argv)
+         }
+     }
+ 
+-    /* Until we have something better, only root and the shell can use su. */
+-    myuid = getuid();
+-    if (myuid != AID_ROOT && myuid != AID_SHELL) {
+-        fprintf(stderr,"su: uid %d not allowed to su\n", myuid);
+-        return 1;
+-    }
+-    
+     if(setgid(gid) || setuid(uid)) {
+         fprintf(stderr,"su: permission denied\n");
+         return 1;

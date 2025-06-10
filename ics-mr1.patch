@@ -3401,7 +3401,7 @@ index 3536084..b925153 100644
 
 project frameworks/base/
 diff --git a/frameworks/base/core/java/android/app/ActivityManager.java b/frameworks/base/core/java/android/app/ActivityManager.java
-index 1a7aa1f2..b2ea7c68 100644
+index 1a7aa1f2..01847954 100644
 --- a/frameworks/base/core/java/android/app/ActivityManager.java
 +++ b/frameworks/base/core/java/android/app/ActivityManager.java
 @@ -206,7 +206,7 @@ public class ActivityManager {
@@ -3409,7 +3409,7 @@ index 1a7aa1f2..b2ea7c68 100644
          // Really brain dead right now -- just take this from the configured
          // vm heap size, and assume it is in megabytes and thus ends with "m".
 -        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "16m");
-+        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "24m");
++        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "18m");
          return Integer.parseInt(vmHeapSize.substring(0, vmHeapSize.length()-1));
      }
      
@@ -3488,15 +3488,20 @@ index 71f3cf51..6b79a24c 100644
  
      @SuppressWarnings({"deprecation"})
 diff --git a/frameworks/base/core/jni/AndroidRuntime.cpp b/frameworks/base/core/jni/AndroidRuntime.cpp
-index c00e6c9a..425f75c2 100644
+index c00e6c9a..5d75da68 100644
 --- a/frameworks/base/core/jni/AndroidRuntime.cpp
 +++ b/frameworks/base/core/jni/AndroidRuntime.cpp
-@@ -561,7 +561,7 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
+@@ -557,11 +557,11 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
+      * values should be specified in a product property override.
+      */
+     strcpy(heapstartsizeOptsBuf, "-Xms");
+-    property_get("dalvik.vm.heapstartsize", heapstartsizeOptsBuf+4, "4m");
++    property_get("dalvik.vm.heapstartsize", heapstartsizeOptsBuf+4, "1m");
      opt.optionString = heapstartsizeOptsBuf;
      mOptions.add(opt);
      strcpy(heapsizeOptsBuf, "-Xmx");
 -    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "16m");
-+    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "24m");
++    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "18m");
      opt.optionString = heapsizeOptsBuf;
      mOptions.add(opt);
  
@@ -3774,45 +3779,18 @@ index 724679f3..a5043e48 100644
  
      private static boolean isEmulator() {
 diff --git a/frameworks/base/services/input/EventHub.cpp b/frameworks/base/services/input/EventHub.cpp
-index 52897417..561c0f47 100644
+index 52897417..8427e29f 100644
 --- a/frameworks/base/services/input/EventHub.cpp
 +++ b/frameworks/base/services/input/EventHub.cpp
-@@ -684,6 +684,40 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
+@@ -684,6 +684,13 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                          event->when = nsecs_t(iev.time.tv_sec) * 1000000000LL
                                  + nsecs_t(iev.time.tv_usec) * 1000LL;
                          LOGV("event time %lld, now %lld", event->when, now);
 +
-+                        // Bug 7291243: Add a guard in case the kernel generates timestamps
-+                        // that appear to be far into the future because they were generated
-+                        // using the wrong clock source.
-+                        //
-+                        // This can happen because when the input device is initially opened
-+                        // it has a default clock source of CLOCK_REALTIME.  Any input events
-+                        // enqueued right after the device is opened will have timestamps
-+                        // generated using CLOCK_REALTIME.  We later set the clock source
-+                        // to CLOCK_MONOTONIC but it is already too late.
-+                        //
-+                        // Invalid input event timestamps can result in ANRs, crashes and
-+                        // and other issues that are hard to track down.  We must not let them
-+                        // propagate through the system.
-+                        //
-+                        // Log a warning so that we notice the problem and recover gracefully.
 +                        if (event->when >= now + 10 * 1000000000LL) {
-+                            // Double-check.  Time may have moved on.
 +                            nsecs_t time = systemTime(SYSTEM_TIME_MONOTONIC);
 +                            if (event->when > time) {
-+                                LOGW("An input event from %s has a timestamp that appears to "
-+                                        "have been generated using the wrong clock source "
-+                                        "(expected CLOCK_MONOTONIC): "
-+                                        "event time %lld, current time %lld, call time %lld.  "
-+                                        "Using current time instead.",
-+                                        device->path.string(), event->when, time, now);
 +                                event->when = time;
-+                            } else {
-+                                LOGV("Event time is ok but failed the fast path and required "
-+                                        "an extra call to systemTime: "
-+                                        "event time %lld, current time %lld, call time %lld.",
-+                                        event->when, time, now);
 +                            }
 +                        }
  #else
@@ -4529,6 +4507,17 @@ index 51da503..ca5705e 100644
                  <category android:name="android.intent.category.DEFAULT" />
 
 project packages/apps/Launcher2/
+diff --git a/packages/apps/Launcher2/res/values-sw600dp/config.xml b/packages/apps/Launcher2/res/values-sw600dp/config.xml
+index 7a07898..7627691 100644
+--- a/packages/apps/Launcher2/res/values-sw600dp/config.xml
++++ b/packages/apps/Launcher2/res/values-sw600dp/config.xml
+@@ -1,5 +1,5 @@
+ <resources>
+-    <bool name="config_largeHeap">true</bool>
++    <bool name="config_largeHeap">false</bool>
+ 
+ <!-- AllApps/Customize/AppsCustomize -->
+     <!-- Out of 100, the percent to shrink the workspace during spring loaded mode. -->
 diff --git a/packages/apps/Launcher2/res/values/config.xml b/packages/apps/Launcher2/res/values/config.xml
 index 7ab9870..532af53 100644
 --- a/packages/apps/Launcher2/res/values/config.xml
@@ -7012,7 +7001,7 @@ index 9decbb9..4c25d9c 100644
  include $(BUILD_HOST_STATIC_LIBRARY)
  endif # HOST_OS == linux
 diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
-index 840faa5..8eae983 100644
+index 840faa5..5e837bd 100644
 --- a/system/core/rootdir/init.rc
 +++ b/system/core/rootdir/init.rc
 @@ -6,12 +6,16 @@ on early-init
@@ -7033,7 +7022,17 @@ index 840faa5..8eae983 100644
  
  # setup the global environment
      export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
-@@ -60,7 +64,7 @@ loglevel 3
+@@ -32,9 +36,7 @@ loglevel 3
+ # but someday that may change.
+     symlink /system/vendor /vendor
+ 
+-# Create cgroup mount point for cpu accounting
+     mkdir /acct
+-    mount cgroup none /acct cpuacct
+     mkdir /acct/uid
+ 
+     mkdir /system
+@@ -60,7 +62,7 @@ loglevel 3
      mkdir /mnt/obb 0700 root system
      mount tmpfs tmpfs /mnt/obb mode=0755,gid=1000
  
@@ -7042,7 +7041,17 @@ index 840faa5..8eae983 100644
      write /proc/sys/kernel/hung_task_timeout_secs 0
      write /proc/cpu/alignment 4
      write /proc/sys/kernel/sched_latency_ns 10000000
-@@ -92,17 +96,9 @@ loglevel 3
+@@ -69,9 +71,7 @@ loglevel 3
+     write /proc/sys/kernel/sched_child_runs_first 0
+     write /proc/sys/kernel/randomize_va_space 2
+ 
+-# Create cgroup mount points for process groups
+     mkdir /dev/cpuctl
+-    mount cgroup none /dev/cpuctl cpu
+     chown system system /dev/cpuctl
+     chown system system /dev/cpuctl/tasks
+     chmod 0777 /dev/cpuctl/tasks
+@@ -92,17 +92,9 @@ loglevel 3
  # This is needed by any process that uses socket tagging.
      chmod 0644 /dev/xt_qtaguid
  
@@ -7061,7 +7070,7 @@ index 840faa5..8eae983 100644
  
      # We chown/chmod /cache again so because mount is run as root + defaults
      chown system cache /cache
-@@ -160,6 +156,7 @@ on post-fs-data
+@@ -160,6 +152,7 @@ on post-fs-data
      mkdir /data/local 0751 root root
      mkdir /data/local/tmp 0771 shell shell
      mkdir /data/data 0771 system system
@@ -7069,6 +7078,113 @@ index 840faa5..8eae983 100644
      mkdir /data/app-private 0771 system system
      mkdir /data/app 0771 system system
      mkdir /data/property 0700 root root
+@@ -341,14 +334,11 @@ on property:persist.sys.usb.config=*
+ ##
+ service ueventd /sbin/ueventd
+     class core
+-    critical
+ 
+ service console /system/bin/sh
+     class core
+     console
+     disabled
+-    user shell
+-    group log
+ 
+ on property:ro.debuggable=1
+     start console
+@@ -376,13 +366,6 @@ on property:service.adb.root=1
+ 
+ service servicemanager /system/bin/servicemanager
+     class core
+-    user system
+-    group system
+-    critical
+-    onrestart restart zygote
+-    onrestart restart media
+-    onrestart restart surfaceflinger
+-    onrestart restart drm
+ 
+ service vold /system/bin/vold
+     class core
+@@ -401,46 +384,29 @@ service ril-daemon /system/bin/rild
+     class main
+     socket rild stream 660 root radio
+     socket rild-debug stream 660 radio system
+-    user root
+-    group radio cache inet misc audio sdcard_rw log
+ 
+ service surfaceflinger /system/bin/surfaceflinger
+     class main
+-    user system
+-    group graphics
+-    onrestart restart zygote
+ 
+ service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
+     class main
+     socket zygote stream 660 root system
+-    onrestart write /sys/android_power/request_state wake
+-    onrestart write /sys/power/state on
+-    onrestart restart media
+-    onrestart restart netd
+ 
+ service drm /system/bin/drmserver
+     class main
+-    user drm
+-    group system inet drmrpc
+ 
+ service media /system/bin/mediaserver
+     class main
+-    user media
+-    group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc
+     ioprio rt 4
+ 
+ service bootanim /system/bin/bootanimation
+     class main
+-    user graphics
+-    group graphics
+     disabled
+     oneshot
+ 
+ service dbus /system/bin/dbus-daemon --system --nofork
+     class main
+     socket dbus stream 660 bluetooth bluetooth
+-    user bluetooth
+-    group bluetooth net_bt_admin
+ 
+ service bluetoothd /system/bin/bluetoothd -n
+     class main
+@@ -448,7 +414,6 @@ service bluetoothd /system/bin/bluetoothd -n
+     socket dbus_bluetooth stream 660 bluetooth bluetooth
+     # init.rc does not yet support applying capabilities, so run as root and
+     # let bluetoothd drop uid to bluetooth with the right linux capabilities
+-    group bluetooth net_bt_admin misc
+     disabled
+ 
+ service installd /system/bin/installd
+@@ -463,22 +428,17 @@ service racoon /system/bin/racoon
+     class main
+     socket racoon stream 600 system system
+     # IKE uses UDP port 500. Racoon will setuid to vpn after binding the port.
+-    group vpn net_admin inet
+     disabled
+     oneshot
+ 
+ service mtpd /system/bin/mtpd
+     class main
+     socket mtpd stream 600 system system
+-    user vpn
+-    group vpn net_admin inet net_raw
+     disabled
+     oneshot
+ 
+ service keystore /system/bin/keystore /data/misc/keystore
+     class main
+-    user keystore
+-    group keystore
+     socket keystore stream 666
+ 
+ service dumpstate /system/bin/dumpstate -s
 
 project system/extras/
 diff --git a/system/extras/procrank/Android.mk b/system/extras/procrank/Android.mk
@@ -7084,3 +7200,30 @@ index be7c599..0b2d59a 100644
  
  LOCAL_SHARED_LIBRARIES := libpagemap
  
+diff --git a/system/extras/su/su.c b/system/extras/su/su.c
+index b87cece..4db0a19 100644
+--- a/system/extras/su/su.c
++++ b/system/extras/su/su.c
+@@ -42,7 +42,7 @@
+ int main(int argc, char **argv)
+ {
+     struct passwd *pw;
+-    int uid, gid, myuid;
++    int uid, gid;
+ 
+     if(argc < 2) {
+         uid = gid = 0;
+@@ -57,13 +57,6 @@ int main(int argc, char **argv)
+         }
+     }
+ 
+-    /* Until we have something better, only root and the shell can use su. */
+-    myuid = getuid();
+-    if (myuid != AID_ROOT && myuid != AID_SHELL) {
+-        fprintf(stderr,"su: uid %d not allowed to su\n", myuid);
+-        return 1;
+-    }
+-    
+     if(setgid(gid) || setuid(uid)) {
+         fprintf(stderr,"su: permission denied\n");
+         return 1;
