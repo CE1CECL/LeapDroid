@@ -12,5 +12,5 @@ To Install LeapDroid:
 .\remote_flash.bat
 ```
 
-And Choose the LF2000 Option! (Only the LF2000 Option is Supported for Now, as only LF2000 support has been implemented!)
+And Choose the LF1000/LF2000 Option, depending on your platform! (Only the LF1000 & LF2000 Options are Supported for Now, as only they have been implemented for now!)
 
