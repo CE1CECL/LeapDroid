@@ -1,0 +1,453 @@
+
+project cts/
+diff --git a/cts/tests/acceleration/AndroidManifest.xml b/cts/tests/acceleration/AndroidManifest.xml
+index f92b736..14851e9 100644
+--- a/cts/tests/acceleration/AndroidManifest.xml
++++ b/cts/tests/acceleration/AndroidManifest.xml
+@@ -17,7 +17,7 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+         package="com.android.cts.acceleration.stub">
+ 
+-    <application android:hardwareAccelerated="true">
++    <application android:hardwareAccelerated="false">
+         <activity android:name="android.acceleration.cts.HardwareAcceleratedActivity" />
+         <activity android:name="android.acceleration.cts.SoftwareAcceleratedActivity"
+                 android:hardwareAccelerated="false" />
+diff --git a/cts/tests/tests/textureview/AndroidManifest.xml b/cts/tests/tests/textureview/AndroidManifest.xml
+index 63cd233..658305e 100644
+--- a/cts/tests/tests/textureview/AndroidManifest.xml
++++ b/cts/tests/tests/textureview/AndroidManifest.xml
+@@ -29,7 +29,7 @@
+ 
+     <application
+         android:label="@string/app_name"
+-        android:hardwareAccelerated="true">
++        android:hardwareAccelerated="false">
+         <activity
+             android:name="android.textureview.cts.TextureViewTestActivity"
+             android:label="@string/app_name" >
+
+project development/
+diff --git a/development/samples/ApiDemos/AndroidManifest.xml b/development/samples/ApiDemos/AndroidManifest.xml
+index bcb0fcb..93e7c5e 100644
+--- a/development/samples/ApiDemos/AndroidManifest.xml
++++ b/development/samples/ApiDemos/AndroidManifest.xml
+@@ -47,7 +47,7 @@
+     <application android:name="ApiDemosApplication"
+             android:label="@string/activity_sample_code"
+             android:icon="@drawable/app_sample_code"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+ 
+         <!-- This is how we can request a library but still allow the app
+              to be installed if it doesn't exist. -->
+diff --git a/development/samples/HelloEffects/AndroidManifest.xml b/development/samples/HelloEffects/AndroidManifest.xml
+index d3c5f64..36f5d35 100644
+--- a/development/samples/HelloEffects/AndroidManifest.xml
++++ b/development/samples/HelloEffects/AndroidManifest.xml
+@@ -20,7 +20,7 @@
+     <application android:label="@string/app_name"
+             android:icon="@drawable/ic_launcher"
+             android:debuggable="true"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+         <activity android:name="com.example.android.mediafx.HelloEffects"
+                 android:label="@string/app_name">
+             <intent-filter>
+diff --git a/development/samples/HoneycombGallery/AndroidManifest.xml b/development/samples/HoneycombGallery/AndroidManifest.xml
+index 2a99856..637d75b 100644
+--- a/development/samples/HoneycombGallery/AndroidManifest.xml
++++ b/development/samples/HoneycombGallery/AndroidManifest.xml
+@@ -33,7 +33,7 @@
+         android:icon="@drawable/icon"
+         android:logo="@drawable/logo"
+         android:theme="@style/AppTheme.Light"
+-        android:hardwareAccelerated="true">
++        android:hardwareAccelerated="false">
+ 
+         <activity android:name=".MainActivity"
+             android:label="@string/app_name"
+diff --git a/development/samples/RenderScript/Fountain/AndroidManifest.xml b/development/samples/RenderScript/Fountain/AndroidManifest.xml
+index d19b8c3..b7f6157 100644
+--- a/development/samples/RenderScript/Fountain/AndroidManifest.xml
++++ b/development/samples/RenderScript/Fountain/AndroidManifest.xml
+@@ -4,7 +4,7 @@
+     <uses-sdk android:minSdkVersion="14" />
+     <application
+         android:label="RsFountain"
+-        android:hardwareAccelerated="true"
++        android:hardwareAccelerated="false"
+         android:icon="@drawable/test_pattern">
+         <activity android:name="Fountain">
+             <intent-filter>
+diff --git a/development/samples/RenderScript/FountainFbo/AndroidManifest.xml b/development/samples/RenderScript/FountainFbo/AndroidManifest.xml
+index 082744b..f8c3b27 100644
+--- a/development/samples/RenderScript/FountainFbo/AndroidManifest.xml
++++ b/development/samples/RenderScript/FountainFbo/AndroidManifest.xml
+@@ -4,7 +4,7 @@
+     <uses-sdk android:minSdkVersion="14" />
+     <application
+         android:label="RsFountainFbo"
+-        android:hardwareAccelerated="true"
++        android:hardwareAccelerated="false"
+         android:icon="@drawable/test_pattern">
+         <activity android:name="FountainFbo">
+             <intent-filter>
+diff --git a/development/samples/Support13Demos/AndroidManifest.xml b/development/samples/Support13Demos/AndroidManifest.xml
+index bc32d09..0aee484 100644
+--- a/development/samples/Support13Demos/AndroidManifest.xml
++++ b/development/samples/Support13Demos/AndroidManifest.xml
+@@ -35,7 +35,7 @@
+ 
+     <application android:label="@string/activity_sample_code"
+             android:icon="@drawable/app_sample_code"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+ 
+         <activity android:name="Support13Demos">
+             <intent-filter>
+diff --git a/development/samples/Support4Demos/AndroidManifest.xml b/development/samples/Support4Demos/AndroidManifest.xml
+index 6d71b03..5eb2712 100644
+--- a/development/samples/Support4Demos/AndroidManifest.xml
++++ b/development/samples/Support4Demos/AndroidManifest.xml
+@@ -35,7 +35,7 @@
+ 
+     <application android:label="@string/activity_sample_code"
+             android:icon="@drawable/app_sample_code"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+ 
+         <activity android:name="Support4Demos">
+             <intent-filter>
+diff --git a/development/samples/training/bitmapfun/AndroidManifest.xml b/development/samples/training/bitmapfun/AndroidManifest.xml
+index 4a6f0f5..519da0b 100644
+--- a/development/samples/training/bitmapfun/AndroidManifest.xml
++++ b/development/samples/training/bitmapfun/AndroidManifest.xml
+@@ -30,7 +30,7 @@
+ 
+     <application
+         android:description="@string/app_description"
+-        android:hardwareAccelerated="true"
++        android:hardwareAccelerated="false"
+         android:icon="@drawable/ic_launcher"
+         android:label="@string/app_name" >
+         <activity
+
+project frameworks/base/
+diff --git a/frameworks/base/packages/SystemUI/AndroidManifest.xml b/frameworks/base/packages/SystemUI/AndroidManifest.xml
+index ec08e6c0..50e82822 100644
+--- a/frameworks/base/packages/SystemUI/AndroidManifest.xml
++++ b/frameworks/base/packages/SystemUI/AndroidManifest.xml
+@@ -15,7 +15,7 @@
+         android:persistent="true"
+         android:allowClearUserData="false"
+         android:allowBackup="false"
+-        android:hardwareAccelerated="true"
++        android:hardwareAccelerated="false"
+         android:label="@string/app_label"
+         android:icon="@drawable/ic_launcher_settings">
+ 
+@@ -109,7 +109,7 @@
+             android:label="Nyandroid"
+             android:icon="@drawable/nyandroid04"
+             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+-            android:hardwareAccelerated="true"
++            android:hardwareAccelerated="false"
+             android:launchMode="singleInstance"
+             android:excludeFromRecents="true">
+             <intent-filter>
+diff --git a/frameworks/base/tests/BiDiTests/AndroidManifest.xml b/frameworks/base/tests/BiDiTests/AndroidManifest.xml
+index c60edd83..6f496624 100644
+--- a/frameworks/base/tests/BiDiTests/AndroidManifest.xml
++++ b/frameworks/base/tests/BiDiTests/AndroidManifest.xml
+@@ -19,7 +19,7 @@
+     android:versionCode="1"
+     android:versionName="1.0">
+ 
+-    <application android:label="BiDiTests" android:hardwareAccelerated="true">
++    <application android:label="BiDiTests" android:hardwareAccelerated="false">
+ 
+         <activity android:name=".BiDiTestActivity"
+             android:windowSoftInputMode="stateAlwaysHidden">
+diff --git a/frameworks/base/tests/DumpRenderTree/AndroidManifest.xml b/frameworks/base/tests/DumpRenderTree/AndroidManifest.xml
+index dc44b253..86b3f062 100644
+--- a/frameworks/base/tests/DumpRenderTree/AndroidManifest.xml
++++ b/frameworks/base/tests/DumpRenderTree/AndroidManifest.xml
+@@ -27,7 +27,7 @@
+         </activity>
+         <activity android:name="TestShellActivity"
+           android:launchMode="singleTop"
+-          android:hardwareAccelerated="true"
++          android:hardwareAccelerated="false"
+           android:screenOrientation="portrait"
+           android:theme="@android:style/Theme.Light"/>
+         <activity android:name="ReliabilityTestActivity" android:screenOrientation="portrait"
+diff --git a/frameworks/base/tests/HwAccelerationTest/AndroidManifest.xml b/frameworks/base/tests/HwAccelerationTest/AndroidManifest.xml
+index 929b103b..8c357437 100644
+--- a/frameworks/base/tests/HwAccelerationTest/AndroidManifest.xml
++++ b/frameworks/base/tests/HwAccelerationTest/AndroidManifest.xml
+@@ -28,7 +28,7 @@
+     
+     <application
+         android:label="HwUi"
+-        android:hardwareAccelerated="true">
++        android:hardwareAccelerated="false">
+ 
+         <activity
+                 android:name="DisplayListLayersActivity"
+diff --git a/frameworks/base/tests/RenderScriptTests/ImageProcessing/AndroidManifest.xml b/frameworks/base/tests/RenderScriptTests/ImageProcessing/AndroidManifest.xml
+index 2232b982..45e05722 100644
+--- a/frameworks/base/tests/RenderScriptTests/ImageProcessing/AndroidManifest.xml
++++ b/frameworks/base/tests/RenderScriptTests/ImageProcessing/AndroidManifest.xml
+@@ -5,7 +5,7 @@
+     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+     <uses-sdk android:minSdkVersion="11" />
+     <application android:label="Image Processing"
+-                 android:hardwareAccelerated="true">
++                 android:hardwareAccelerated="false">
+         <uses-library android:name="android.test.runner" />
+         <activity android:name="ImageProcessingActivity">
+             <intent-filter>
+diff --git a/frameworks/base/tests/RenderScriptTests/ModelViewer/AndroidManifest.xml b/frameworks/base/tests/RenderScriptTests/ModelViewer/AndroidManifest.xml
+index 57ec4fe7..01d12d39 100644
+--- a/frameworks/base/tests/RenderScriptTests/ModelViewer/AndroidManifest.xml
++++ b/frameworks/base/tests/RenderScriptTests/ModelViewer/AndroidManifest.xml
+@@ -12,7 +12,7 @@
+         </activity>
+         <activity android:name="A3DSelector"
+                   android:label="A3DSelector"
+-                  android:hardwareAccelerated="true">
++                  android:hardwareAccelerated="false">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+             </intent-filter>
+diff --git a/frameworks/base/tests/StatusBar/AndroidManifest.xml b/frameworks/base/tests/StatusBar/AndroidManifest.xml
+index 81442bfc..041137b5 100644
+--- a/frameworks/base/tests/StatusBar/AndroidManifest.xml
++++ b/frameworks/base/tests/StatusBar/AndroidManifest.xml
+@@ -25,7 +25,7 @@
+         <activity android:name="NotificationBuilderTest"
+                 android:label="_Notify Builder"
+                 android:theme="@android:style/Theme.Holo"
+-                android:hardwareAccelerated="true"
++                android:hardwareAccelerated="false"
+                 >
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+diff --git a/frameworks/base/tests/TileBenchmark/AndroidManifest.xml b/frameworks/base/tests/TileBenchmark/AndroidManifest.xml
+index ab61a9e2..0e2291ff 100644
+--- a/frameworks/base/tests/TileBenchmark/AndroidManifest.xml
++++ b/frameworks/base/tests/TileBenchmark/AndroidManifest.xml
+@@ -5,7 +5,7 @@
+     <uses-permission android:name="android.permission.INTERNET"/>
+     <application android:icon="@drawable/icon"
+                  android:label="@string/app_name"
+-                 android:hardwareAccelerated="true">
++                 android:hardwareAccelerated="false">
+         <activity android:name=".ProfileActivity"
+                   android:label="@string/profile_activity"
+                   android:theme="@android:style/Theme.Holo.NoActionBar">
+
+project packages/apps/BasicSmsReceiver/
+diff --git a/packages/apps/BasicSmsReceiver/AndroidManifest.xml b/packages/apps/BasicSmsReceiver/AndroidManifest.xml
+index aa46a07..0526be3 100755
+--- a/packages/apps/BasicSmsReceiver/AndroidManifest.xml
++++ b/packages/apps/BasicSmsReceiver/AndroidManifest.xml
+@@ -29,7 +29,7 @@
+ 
+     <application android:name="BasicSmsReceiverApp"
+             android:label="@string/sms_app_name"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+ 
+         <activity android:name=".DialogSmsDisplay"
+                   android:theme="@android:style/Theme.Holo.Dialog"
+
+project packages/apps/Browser/
+diff --git a/packages/apps/Browser/AndroidManifest.xml b/packages/apps/Browser/AndroidManifest.xml
+index 3a281c9..0f0da9b 100644
+--- a/packages/apps/Browser/AndroidManifest.xml
++++ b/packages/apps/Browser/AndroidManifest.xml
+@@ -49,7 +49,7 @@
+                    android:label="@string/application_name"
+                    android:icon="@mipmap/ic_launcher_browser"
+                    android:backupAgent=".BrowserBackupAgent"
+-                   android:hardwareAccelerated="true"
++                   android:hardwareAccelerated="false"
+                    android:taskAffinity="android.task.browser" >
+ 
+         <provider android:name=".provider.BrowserProvider2"
+
+project packages/apps/Calendar/
+diff --git a/packages/apps/Calendar/AndroidManifest.xml b/packages/apps/Calendar/AndroidManifest.xml
+index 56707b7..7321cd3 100644
+--- a/packages/apps/Calendar/AndroidManifest.xml
++++ b/packages/apps/Calendar/AndroidManifest.xml
+@@ -41,7 +41,7 @@
+     <application android:name="CalendarApplication"
+             android:label="@string/app_label" android:icon="@mipmap/ic_launcher_calendar"
+             android:taskAffinity="android.task.calendar"
+-            android:hardwareAccelerated="true"
++            android:hardwareAccelerated="false"
+             android:backupAgent="com.android.calendar.CalendarBackupAgent" >
+ 
+         <meta-data android:name="com.google.android.backup.api_key"
+
+project packages/apps/Camera/
+diff --git a/packages/apps/Camera/AndroidManifest.xml b/packages/apps/Camera/AndroidManifest.xml
+index ee57c31..7138710 100644
+--- a/packages/apps/Camera/AndroidManifest.xml
++++ b/packages/apps/Camera/AndroidManifest.xml
+@@ -21,7 +21,7 @@
+             android:name="com.android.camera.CameraAppImpl"
+             android:label="@string/camera_label"
+             android:theme="@style/ThemeCamera"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+         <uses-library android:name="com.google.android.media.effects" android:required="false" />
+         <receiver android:name="com.android.camera.CameraButtonIntentReceiver">
+             <intent-filter>
+
+project packages/apps/Contacts/
+diff --git a/packages/apps/Contacts/AndroidManifest.xml b/packages/apps/Contacts/AndroidManifest.xml
+index d06fe1d..d02c9e7 100644
+--- a/packages/apps/Contacts/AndroidManifest.xml
++++ b/packages/apps/Contacts/AndroidManifest.xml
+@@ -54,7 +54,7 @@
+         android:label="@string/contactsList"
+         android:icon="@mipmap/ic_launcher_contacts"
+         android:taskAffinity="android.task.contacts"
+-        android:hardwareAccelerated="true"
++        android:hardwareAccelerated="false"
+     >
+ 
+         <!-- Intercept Dialer Intents for devices without a phone.
+
+project packages/apps/DeskClock/
+diff --git a/packages/apps/DeskClock/AndroidManifest.xml b/packages/apps/DeskClock/AndroidManifest.xml
+index 17749b3..9cbcb04 100644
+--- a/packages/apps/DeskClock/AndroidManifest.xml
++++ b/packages/apps/DeskClock/AndroidManifest.xml
+@@ -133,7 +133,7 @@
+         <activity android:name=".Screensaver"
+             android:label="@string/app_label"
+             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+-            android:hardwareAccelerated="true"
++            android:hardwareAccelerated="false"
+             >
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+
+project packages/apps/Gallery2/
+diff --git a/packages/apps/Gallery2/AndroidManifest.xml b/packages/apps/Gallery2/AndroidManifest.xml
+index 51da503..ca5705e 100644
+--- a/packages/apps/Gallery2/AndroidManifest.xml
++++ b/packages/apps/Gallery2/AndroidManifest.xml
+@@ -200,7 +200,7 @@
+                 android:label="@string/photoeditor_name"
+                 android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen"
+                 android:configChanges="keyboardHidden|orientation|screenSize"
+-                android:hardwareAccelerated="true"
++                android:hardwareAccelerated="false"
+                 android:process=":edit">
+             <intent-filter>
+                 <action android:name="android.intent.action.EDIT" />
+@@ -214,7 +214,7 @@
+         <activity android:name="com.android.gallery3d.app.SlideshowDream"
+                 android:label="@string/slideshow_dream_name"
+                 android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+-                android:hardwareAccelerated="true">
++                android:hardwareAccelerated="false">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.DEFAULT" />
+
+project packages/apps/QuickSearchBox/
+diff --git a/packages/apps/QuickSearchBox/AndroidManifest.xml b/packages/apps/QuickSearchBox/AndroidManifest.xml
+index 30e24fa..0911a27 100644
+--- a/packages/apps/QuickSearchBox/AndroidManifest.xml
++++ b/packages/apps/QuickSearchBox/AndroidManifest.xml
+@@ -38,7 +38,7 @@
+                  android:icon="@mipmap/search_app_icon"
+                  android:name=".QsbApplicationWrapper"
+                  android:theme="@style/Theme.QuickSearchBox"
+-                 android:hardwareAccelerated="true">
++                 android:hardwareAccelerated="false">
+         <activity android:name=".SearchActivity"
+                   android:label="@string/app_name"
+                   android:launchMode="singleTask"
+
+project packages/apps/Settings/
+diff --git a/packages/apps/Settings/AndroidManifest.xml b/packages/apps/Settings/AndroidManifest.xml
+index cfa92b0..2b19b39 100644
+--- a/packages/apps/Settings/AndroidManifest.xml
++++ b/packages/apps/Settings/AndroidManifest.xml
+@@ -60,7 +60,7 @@
+             android:taskAffinity=""
+             android:theme="@android:style/Theme.Holo"
+             android:uiOptions="splitActionBarWhenNarrow"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+ 
+         <!-- Settings -->
+ 
+
+project packages/apps/VideoEditor/
+diff --git a/packages/apps/VideoEditor/AndroidManifest.xml b/packages/apps/VideoEditor/AndroidManifest.xml
+index ba7be2f..8854847 100644
+--- a/packages/apps/VideoEditor/AndroidManifest.xml
++++ b/packages/apps/VideoEditor/AndroidManifest.xml
+@@ -8,7 +8,7 @@
+     <uses-permission android:name="android.permission.WAKE_LOCK" />
+ 
+     <application android:icon="@mipmap/ic_launcher_moviestudio"
+-        android:label="@string/short_app_name" android:hardwareAccelerated="true"
++        android:label="@string/short_app_name" android:hardwareAccelerated="false"
+         android:largeHeap="true">
+ 
+         <service android:name=".service.ApiService"/>
+
+project packages/experimental/
+diff --git a/packages/experimental/DreamTheater/AndroidManifest.xml b/packages/experimental/DreamTheater/AndroidManifest.xml
+index 61c6f76..0071d42 100644
+--- a/packages/experimental/DreamTheater/AndroidManifest.xml
++++ b/packages/experimental/DreamTheater/AndroidManifest.xml
+@@ -26,7 +26,7 @@
+         <activity android:name=".Demos$Demo2"
+             android:label="Demo: Slideshow"
+             android:theme="@style/Theme.Dream"
+-            android:hardwareAccelerated="true"
++            android:hardwareAccelerated="false"
+             >
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+
+project packages/providers/DownloadProvider/
+diff --git a/packages/providers/DownloadProvider/ui/AndroidManifest.xml b/packages/providers/DownloadProvider/ui/AndroidManifest.xml
+index 04d1863..0e14bb8 100644
+--- a/packages/providers/DownloadProvider/ui/AndroidManifest.xml
++++ b/packages/providers/DownloadProvider/ui/AndroidManifest.xml
+@@ -9,7 +9,7 @@
+     <application android:process="android.process.media"
+                  android:label="@string/app_label"
+                  android:icon="@mipmap/ic_launcher_download"
+-                 android:hardwareAccelerated="true">
++                 android:hardwareAccelerated="false">
+         <activity android:name=".DownloadList"
+                   android:launchMode="singleTop"
+                   android:theme="@android:style/Theme.Holo.DialogWhenLarge">
+
+project packages/wallpapers/LivePicker/
+diff --git a/packages/wallpapers/LivePicker/AndroidManifest.xml b/packages/wallpapers/LivePicker/AndroidManifest.xml
+index b6947dc..6010833 100644
+--- a/packages/wallpapers/LivePicker/AndroidManifest.xml
++++ b/packages/wallpapers/LivePicker/AndroidManifest.xml
+@@ -35,7 +35,7 @@
+             android:icon="@drawable/ic_launcher_live_wallpaper"
+             android:label="@string/live_wallpaper_picker_label"
+             android:theme="@style/LivePickerTheme"
+-            android:hardwareAccelerated="true">
++            android:hardwareAccelerated="false">
+             <intent-filter>
+                 <action android:name="android.service.wallpaper.LIVE_WALLPAPER_CHOOSER" />
+                 <action android:name="android.intent.action.SET_WALLPAPER" />
