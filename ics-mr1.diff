@@ -653,36 +653,6 @@ index 6b61c47d..b8a3ebf2 100644
                  pkg.applicationInfo.dataDir = dataPath.getPath();
              } else {
                  if (DEBUG_PACKAGE_SCANNING) {
-diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
-index f94d3214..2a463544 100644
---- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
-+++ b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
-@@ -102,14 +102,14 @@ uint32_t DisplayHardware::getMaxViewportDims() const {
- 
- static status_t selectConfigForPixelFormat(
-         EGLDisplay dpy,
--        EGLint const* attrs,
-+        EGLint * attrs,
-         PixelFormat format,
-         EGLConfig* outConfig)
- {
-     EGLConfig config = NULL;
-     EGLint numConfigs = -1, n=0;
-     eglGetConfigs(dpy, NULL, 0, &numConfigs);
--    EGLConfig* const configs = new EGLConfig[numConfigs];
-+    EGLConfig* configs = new EGLConfig[numConfigs];
-     eglChooseConfig(dpy, attrs, configs, numConfigs, &n);
-     for (int i=0 ; i<n ; i++) {
-         EGLint nativeVisualId = 0;
-@@ -135,7 +135,7 @@ void DisplayHardware::init(uint32_t dpy)
-     }
- 
-     int format;
--    ANativeWindow const * const window = mNativeWindow.get();
-+    ANativeWindow * window = mNativeWindow.get();
-     window->query(window, NATIVE_WINDOW_FORMAT, &format);
-     mDpiX = mNativeWindow->xdpi;
-     mDpiY = mNativeWindow->ydpi;
 diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
 index 3b7c09e8..b94e4d5c 100644
 --- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
@@ -719,15 +689,56 @@ index f773079..5f57b7b 100644
  LOCAL_SRC_FILES := audio_hw.c
  LOCAL_SHARED_LIBRARIES := liblog libcutils
 diff --git a/hardware/libhardware/modules/gralloc/framebuffer.cpp b/hardware/libhardware/modules/gralloc/framebuffer.cpp
-index f908976..62521ac 100644
+index f908976..e52944d 100644
 --- a/hardware/libhardware/modules/gralloc/framebuffer.cpp
 +++ b/hardware/libhardware/modules/gralloc/framebuffer.cpp
-@@ -335,7 +335,7 @@ int fb_device_open(hw_module_t const* module, const char* name,
+@@ -42,10 +42,6 @@
+ 
+ /*****************************************************************************/
+ 
+-// numbers of buffers for page flipping
+-#define NUM_BUFFERS 2
+-
+-
+ enum {
+     PAGE_FLIP = 0x00000001,
+     LOCKED = 0x00000002
+@@ -170,28 +166,7 @@ int mapFrameBufferLocked(struct private_module_t* module)
+     info.xoffset = 0;
+     info.yoffset = 0;
+     info.activate = FB_ACTIVATE_NOW;
+-
+-    /*
+-     * Request NUM_BUFFERS screens (at lest 2 for page flipping)
+-     */
+-    info.yres_virtual = info.yres * NUM_BUFFERS;
+-
+-
+-    uint32_t flags = PAGE_FLIP;
+-    if (ioctl(fd, FBIOPUT_VSCREENINFO, &info) == -1) {
+-        info.yres_virtual = info.yres;
+-        flags &= ~PAGE_FLIP;
+-        LOGW("FBIOPUT_VSCREENINFO failed, page flipping not supported");
+-    }
+-
+-    if (info.yres_virtual < info.yres * 2) {
+-        // we need at least 2 for page-flipping
+-        info.yres_virtual = info.yres;
+-        flags &= ~PAGE_FLIP;
+-        LOGW("page flipping not supported (yres_virtual=%d, requested=%d)",
+-                info.yres_virtual, info.yres*2);
+-    }
+-
++    uint32_t flags = 0;
+     if (ioctl(fd, FBIOGET_VSCREENINFO, &info) == -1)
+         return -errno;
+ 
+@@ -335,7 +310,7 @@ int fb_device_open(hw_module_t const* module, const char* name,
          if (status >= 0) {
              int stride = m->finfo.line_length / (m->info.bits_per_pixel >> 3);
              int format = (m->info.bits_per_pixel == 32)
 -                         ? HAL_PIXEL_FORMAT_RGBX_8888
-+                         ? (m->info.red.offset ? HAL_PIXEL_FORMAT_BGRA_8888 : HAL_PIXEL_FORMAT_RGBX_8888)
++                         ? HAL_PIXEL_FORMAT_BGRA_8888
                           : HAL_PIXEL_FORMAT_RGB_565;
              const_cast<uint32_t&>(dev->device.flags) = 0;
              const_cast<uint32_t&>(dev->device.width) = m->info.xres;
@@ -773,7 +784,7 @@ index 7ab9870..532af53 100644
 
 project system/core/
 diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
-index 840faa5..5e837bd 100644
+index 840faa5..8eae983 100644
 --- a/system/core/rootdir/init.rc
 +++ b/system/core/rootdir/init.rc
 @@ -6,12 +6,16 @@ on early-init
@@ -794,17 +805,7 @@ index 840faa5..5e837bd 100644
  
  # setup the global environment
      export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
-@@ -32,9 +36,7 @@ loglevel 3
- # but someday that may change.
-     symlink /system/vendor /vendor
- 
--# Create cgroup mount point for cpu accounting
-     mkdir /acct
--    mount cgroup none /acct cpuacct
-     mkdir /acct/uid
- 
-     mkdir /system
-@@ -60,7 +62,7 @@ loglevel 3
+@@ -60,7 +64,7 @@ loglevel 3
      mkdir /mnt/obb 0700 root system
      mount tmpfs tmpfs /mnt/obb mode=0755,gid=1000
  
@@ -813,17 +814,7 @@ index 840faa5..5e837bd 100644
      write /proc/sys/kernel/hung_task_timeout_secs 0
      write /proc/cpu/alignment 4
      write /proc/sys/kernel/sched_latency_ns 10000000
-@@ -69,9 +71,7 @@ loglevel 3
-     write /proc/sys/kernel/sched_child_runs_first 0
-     write /proc/sys/kernel/randomize_va_space 2
- 
--# Create cgroup mount points for process groups
-     mkdir /dev/cpuctl
--    mount cgroup none /dev/cpuctl cpu
-     chown system system /dev/cpuctl
-     chown system system /dev/cpuctl/tasks
-     chmod 0777 /dev/cpuctl/tasks
-@@ -92,17 +92,9 @@ loglevel 3
+@@ -92,17 +96,9 @@ loglevel 3
  # This is needed by any process that uses socket tagging.
      chmod 0644 /dev/xt_qtaguid
  
@@ -842,7 +833,7 @@ index 840faa5..5e837bd 100644
  
      # We chown/chmod /cache again so because mount is run as root + defaults
      chown system cache /cache
-@@ -160,6 +152,7 @@ on post-fs-data
+@@ -160,6 +156,7 @@ on post-fs-data
      mkdir /data/local 0751 root root
      mkdir /data/local/tmp 0771 shell shell
      mkdir /data/data 0771 system system
@@ -850,113 +841,6 @@ index 840faa5..5e837bd 100644
      mkdir /data/app-private 0771 system system
      mkdir /data/app 0771 system system
      mkdir /data/property 0700 root root
-@@ -341,14 +334,11 @@ on property:persist.sys.usb.config=*
- ##
- service ueventd /sbin/ueventd
-     class core
--    critical
- 
- service console /system/bin/sh
-     class core
-     console
-     disabled
--    user shell
--    group log
- 
- on property:ro.debuggable=1
-     start console
-@@ -376,13 +366,6 @@ on property:service.adb.root=1
- 
- service servicemanager /system/bin/servicemanager
-     class core
--    user system
--    group system
--    critical
--    onrestart restart zygote
--    onrestart restart media
--    onrestart restart surfaceflinger
--    onrestart restart drm
- 
- service vold /system/bin/vold
-     class core
-@@ -401,46 +384,29 @@ service ril-daemon /system/bin/rild
-     class main
-     socket rild stream 660 root radio
-     socket rild-debug stream 660 radio system
--    user root
--    group radio cache inet misc audio sdcard_rw log
- 
- service surfaceflinger /system/bin/surfaceflinger
-     class main
--    user system
--    group graphics
--    onrestart restart zygote
- 
- service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
-     class main
-     socket zygote stream 660 root system
--    onrestart write /sys/android_power/request_state wake
--    onrestart write /sys/power/state on
--    onrestart restart media
--    onrestart restart netd
- 
- service drm /system/bin/drmserver
-     class main
--    user drm
--    group system inet drmrpc
- 
- service media /system/bin/mediaserver
-     class main
--    user media
--    group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc
-     ioprio rt 4
- 
- service bootanim /system/bin/bootanimation
-     class main
--    user graphics
--    group graphics
-     disabled
-     oneshot
- 
- service dbus /system/bin/dbus-daemon --system --nofork
-     class main
-     socket dbus stream 660 bluetooth bluetooth
--    user bluetooth
--    group bluetooth net_bt_admin
- 
- service bluetoothd /system/bin/bluetoothd -n
-     class main
-@@ -448,7 +414,6 @@ service bluetoothd /system/bin/bluetoothd -n
-     socket dbus_bluetooth stream 660 bluetooth bluetooth
-     # init.rc does not yet support applying capabilities, so run as root and
-     # let bluetoothd drop uid to bluetooth with the right linux capabilities
--    group bluetooth net_bt_admin misc
-     disabled
- 
- service installd /system/bin/installd
-@@ -463,22 +428,17 @@ service racoon /system/bin/racoon
-     class main
-     socket racoon stream 600 system system
-     # IKE uses UDP port 500. Racoon will setuid to vpn after binding the port.
--    group vpn net_admin inet
-     disabled
-     oneshot
- 
- service mtpd /system/bin/mtpd
-     class main
-     socket mtpd stream 600 system system
--    user vpn
--    group vpn net_admin inet net_raw
-     disabled
-     oneshot
- 
- service keystore /system/bin/keystore /data/misc/keystore
-     class main
--    user keystore
--    group keystore
-     socket keystore stream 666
- 
- service dumpstate /system/bin/dumpstate -s
 
 project system/extras/
 diff --git a/system/extras/su/su.c b/system/extras/su/su.c

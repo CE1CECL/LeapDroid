@@ -2286,8 +2286,74 @@ index 995a5d7..44c83b9 100644
  
  LOCAL_SRC_FILES:= \
    gl_code.cpp
+diff --git a/frameworks/base/services/java/com/android/server/PackageManagerService.java b/frameworks/base/services/java/com/android/server/PackageManagerService.java
+index 29b9ee4..85802c8 100644
+--- a/frameworks/base/services/java/com/android/server/PackageManagerService.java
++++ b/frameworks/base/services/java/com/android/server/PackageManagerService.java
+@@ -3194,61 +3194,6 @@ class PackageManagerService extends IPackageManager.Stub {
+             if (dataPath.exists()) {
+                 mOutPermissions[1] = 0;
+                 FileUtils.getPermissions(dataPath.getPath(), mOutPermissions);
+-
+-                // If we have mismatched owners for the data path, we have a
+-                // problem (unless we're running in the simulator.)
+-                if (mOutPermissions[1] != pkg.applicationInfo.uid && Process.supportsProcesses()) {
+-                    boolean recovered = false;
+-                    if ((parseFlags&PackageParser.PARSE_IS_SYSTEM) != 0) {
+-                        // If this is a system app, we can at least delete its
+-                        // current data so the application will still work.
+-                        if (mInstaller != null) {
+-                            int ret = mInstaller.remove(pkgName, useEncryptedFSDir);
+-                            if (ret >= 0) {
+-                                // Old data gone!
+-                                String msg = "System package " + pkg.packageName
+-                                        + " has changed from uid: "
+-                                        + mOutPermissions[1] + " to "
+-                                        + pkg.applicationInfo.uid + "; old data erased";
+-                                reportSettingsProblem(Log.WARN, msg);
+-                                recovered = true;
+-
+-                                // And now re-install the app.
+-                                ret = mInstaller.install(pkgName, useEncryptedFSDir, pkg.applicationInfo.uid,
+-                                        pkg.applicationInfo.uid);
+-                                if (ret == -1) {
+-                                    // Ack should not happen!
+-                                    msg = "System package " + pkg.packageName
+-                                            + " could not have data directory re-created after delete.";
+-                                    reportSettingsProblem(Log.WARN, msg);
+-                                    mLastScanError = PackageManager.INSTALL_FAILED_INSUFFICIENT_STORAGE;
+-                                    return null;
+-                                }
+-                            }
+-                        }
+-                        if (!recovered) {
+-                            mHasSystemUidErrors = true;
+-                        }
+-                    }
+-                    if (!recovered) {
+-                        pkg.applicationInfo.dataDir = "/mismatched_uid/settings_"
+-                            + pkg.applicationInfo.uid + "/fs_"
+-                            + mOutPermissions[1];
+-                        pkg.applicationInfo.nativeLibraryDir = pkg.applicationInfo.dataDir;
+-                        String msg = "Package " + pkg.packageName
+-                                + " has mismatched uid: "
+-                                + mOutPermissions[1] + " on disk, "
+-                                + pkg.applicationInfo.uid + " in settings";
+-                        synchronized (mPackages) {
+-                            mSettings.mReadMessages.append(msg);
+-                            mSettings.mReadMessages.append('\n');
+-                            uidError = true;
+-                            if (!pkgSetting.uidError) {
+-                                reportSettingsProblem(Log.ERROR, msg);
+-                            }
+-                        }
+-                    }
+-                }
+                 pkg.applicationInfo.dataDir = dataPath.getPath();
+             } else {
+                 if ((parseFlags&PackageParser.PARSE_CHATTY) != 0 && Config.LOGV)
 diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
-index 818774d..f6baeef 100644
+index 818774d..ea52b33 100644
 --- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
 +++ b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardware.cpp
 @@ -96,6 +96,31 @@ PixelFormat DisplayHardware::getFormat() const  { return mFormat; }
@@ -2332,7 +2398,7 @@ index 818774d..f6baeef 100644
      hw_module_t const* module;
      if (hw_get_module(OVERLAY_HARDWARE_MODULE_ID, &module) == 0) {
          overlay_control_open(module, &mOverlayEngine);
-@@ -114,11 +142,13 @@ void DisplayHardware::init(uint32_t dpy)
+@@ -114,6 +142,8 @@ void DisplayHardware::init(uint32_t dpy)
      EGLint numConfigs=0;
      EGLSurface surface;
      EGLContext context;
@@ -2341,13 +2407,6 @@ index 818774d..f6baeef 100644
  
      // initialize EGL
      EGLint attribs[] = {
--            EGL_SURFACE_TYPE,   EGL_WINDOW_BIT,
--            EGL_NONE,           0,
-+            EGL_SURFACE_TYPE,       EGL_WINDOW_BIT,
-+            EGL_NONE,               0,
-             EGL_NONE
-     };
- 
 @@ -139,9 +169,8 @@ void DisplayHardware::init(uint32_t dpy)
      eglInitialize(display, NULL, NULL);
      eglGetConfigs(display, NULL, 0, &numConfigs);
@@ -2360,19 +2419,6 @@ index 818774d..f6baeef 100644
      LOGE_IF(err, "couldn't find an EGLConfig matching the screen format");
      
      EGLint r,g,b,a;
-@@ -222,7 +251,11 @@ void DisplayHardware::init(uint32_t dpy)
-      * Gather OpenGL ES extensions
-      */
- 
--    eglMakeCurrent(display, surface, surface, context);
-+    result = eglMakeCurrent(display, surface, surface, context);
-+    if (!result) {
-+        LOGE("Couldn't create a working GLES context. check logs. exiting...");
-+        exit(0);
-+    }
- 
-     GLExtensions& extensions(GLExtensions::getInstance());
-     extensions.initWithGLStrings(
 diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
 index 90865da..f6aca7b 100644
 --- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
@@ -2461,15 +2507,76 @@ index 4d5a957..1d35668 100644
 
 project hardware/libhardware/
 diff --git a/hardware/libhardware/modules/gralloc/framebuffer.cpp b/hardware/libhardware/modules/gralloc/framebuffer.cpp
-index fe57a8a..4b82f01 100644
+index fe57a8a..e52944d 100644
 --- a/hardware/libhardware/modules/gralloc/framebuffer.cpp
 +++ b/hardware/libhardware/modules/gralloc/framebuffer.cpp
-@@ -355,11 +355,8 @@ int fb_device_open(hw_module_t const* module, const char* name,
+@@ -42,15 +42,6 @@
+ 
+ /*****************************************************************************/
+ 
+-// numbers of buffers for page flipping
+-#if defined(NO_PAGE_FLIPPING)
+-// page-flipping is buggy on some devices
+-#define NUM_BUFFERS 1
+-#else
+-#define NUM_BUFFERS 2
+-#endif
+-
+-
+ enum {
+     PAGE_FLIP = 0x00000001,
+     LOCKED = 0x00000002
+@@ -175,43 +166,7 @@ int mapFrameBufferLocked(struct private_module_t* module)
+     info.xoffset = 0;
+     info.yoffset = 0;
+     info.activate = FB_ACTIVATE_NOW;
+-
+-#if defined(NO_32BPP)
+-    /*
+-     * Explicitly request 5/6/5
+-     */
+-    info.bits_per_pixel = 16;
+-    info.red.offset     = 11;
+-    info.red.length     = 5;
+-    info.green.offset   = 5;
+-    info.green.length   = 6;
+-    info.blue.offset    = 0;
+-    info.blue.length    = 5;
+-    info.transp.offset  = 0;
+-    info.transp.length  = 0;
+-#endif
+-
+-    /*
+-     * Request NUM_BUFFERS screens (at lest 2 for page flipping)
+-     */
+-    info.yres_virtual = info.yres * NUM_BUFFERS;
+-
+-
+-    uint32_t flags = PAGE_FLIP;
+-    if (ioctl(fd, FBIOPUT_VSCREENINFO, &info) == -1) {
+-        info.yres_virtual = info.yres;
+-        flags &= ~PAGE_FLIP;
+-        LOGW("FBIOPUT_VSCREENINFO failed, page flipping not supported");
+-    }
+-
+-    if (info.yres_virtual < info.yres * 2) {
+-        // we need at least 2 for page-flipping
+-        info.yres_virtual = info.yres;
+-        flags &= ~PAGE_FLIP;
+-        LOGW("page flipping not supported (yres_virtual=%d, requested=%d)",
+-                info.yres_virtual, info.yres*2);
+-    }
+-
++    uint32_t flags = 0;
+     if (ioctl(fd, FBIOGET_VSCREENINFO, &info) == -1)
+         return -errno;
+ 
+@@ -355,11 +310,8 @@ int fb_device_open(hw_module_t const* module, const char* name,
          if (status >= 0) {
              int stride = m->finfo.line_length / (m->info.bits_per_pixel >> 3);
              int format = (m->info.bits_per_pixel == 32)
 -                         ? HAL_PIXEL_FORMAT_RGBX_8888
-+                         ? (m->info.red.offset ? HAL_PIXEL_FORMAT_BGRA_8888 : HAL_PIXEL_FORMAT_RGBX_8888)
++                         ? HAL_PIXEL_FORMAT_BGRA_8888
                           : HAL_PIXEL_FORMAT_RGB_565;
 -#ifdef NO_32BPP
 -            format = HAL_PIXEL_FORMAT_RGB_565;
@@ -5128,7 +5235,7 @@ index b095c87..9226c7b 100644
 
 project system/core/
 diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
-index 8227273..86f54a1 100644
+index 8227273..5ed2b1a 100644
 --- a/system/core/rootdir/init.rc
 +++ b/system/core/rootdir/init.rc
 @@ -5,7 +5,7 @@ on init
@@ -5140,17 +5247,7 @@ index 8227273..86f54a1 100644
  
  # setup the global environment
      export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
-@@ -31,9 +31,7 @@ loglevel 3
-     mkdir /mnt 0775 root system
-     mkdir /mnt/sdcard 0000 system system
- 
--# Create cgroup mount point for cpu accounting
-     mkdir /acct
--    mount cgroup none /acct cpuacct
-     mkdir /acct/uid
- 
- # Backwards Compat - XXX: Going away in G*
-@@ -62,7 +60,7 @@ loglevel 3
+@@ -62,7 +62,7 @@ loglevel 3
      mkdir /mnt/obb 0700 root system
      mount tmpfs tmpfs /mnt/obb mode=0755,gid=1000
  
@@ -5159,17 +5256,7 @@ index 8227273..86f54a1 100644
      write /proc/sys/kernel/hung_task_timeout_secs 0
      write /proc/cpu/alignment 4
      write /proc/sys/kernel/sched_latency_ns 10000000
-@@ -70,9 +68,7 @@ loglevel 3
-     write /proc/sys/kernel/sched_compat_yield 1
-     write /proc/sys/kernel/sched_child_runs_first 0
- 
--# Create cgroup mount points for process groups
-     mkdir /dev/cpuctl
--    mount cgroup none /dev/cpuctl cpu
-     chown system system /dev/cpuctl
-     chown system system /dev/cpuctl/tasks
-     chmod 0777 /dev/cpuctl/tasks
-@@ -89,17 +85,9 @@ loglevel 3
+@@ -89,17 +89,9 @@ loglevel 3
      # 5.0 %
      write /dev/cpuctl/bg_non_interactive/cpu.shares 52
  
@@ -5188,7 +5275,7 @@ index 8227273..86f54a1 100644
  
      # We chown/chmod /data again so because mount is run as root + defaults
      chown system system /data
-@@ -156,6 +144,7 @@ on post-fs
+@@ -156,6 +148,7 @@ on post-fs
      chmod 0660 /data/misc/wifi/wpa_supplicant.conf
      mkdir /data/local 0771 shell shell
      mkdir /data/local/tmp 0771 shell shell
@@ -5196,21 +5283,7 @@ index 8227273..86f54a1 100644
      mkdir /data/data 0771 system system
      mkdir /data/app-private 0771 system system
      mkdir /data/app 0771 system system
-@@ -278,13 +267,10 @@ on boot
- ## Daemon processes to be run by init.
- ##
- service ueventd /sbin/ueventd
--    critical
- 
- service console /system/bin/sh
-     console
-     disabled
--    user shell
--    group log
- 
- on property:ro.secure=0
-     start console
-@@ -298,16 +284,14 @@ on property:ro.kernel.qemu=1
+@@ -298,6 +291,8 @@ on property:ro.kernel.qemu=1
      start adbd
  
  on property:persist.service.adb.enable=1
@@ -5219,99 +5292,6 @@ index 8227273..86f54a1 100644
      start adbd
  
  on property:persist.service.adb.enable=0
-     stop adbd
- 
- service servicemanager /system/bin/servicemanager
--    user system
--    critical
--    onrestart restart zygote
--    onrestart restart media
- 
- service vold /system/bin/vold
-     socket vold stream 0660 root mount
-@@ -321,61 +305,40 @@ service debuggerd /system/bin/debuggerd
- service ril-daemon /system/bin/rild
-     socket rild stream 660 root radio
-     socket rild-debug stream 660 radio system
--    user root
--    group radio cache inet misc audio sdcard_rw
- 
- service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
-     socket zygote stream 666
--    onrestart write /sys/android_power/request_state wake
--    onrestart write /sys/power/state on
--    onrestart restart media
--    onrestart restart netd
- 
- service media /system/bin/mediaserver
--    user media
--    group system audio camera graphics inet net_bt net_bt_admin net_raw
-     ioprio rt 4
- 
- service bootanim /system/bin/bootanimation
--    user graphics
--    group graphics
-     disabled
-     oneshot
- 
- service dbus /system/bin/dbus-daemon --system --nofork
-     socket dbus stream 660 bluetooth bluetooth
--    user bluetooth
--    group bluetooth net_bt_admin
- 
- service bluetoothd /system/bin/bluetoothd -n
-     socket bluetooth stream 660 bluetooth bluetooth
-     socket dbus_bluetooth stream 660 bluetooth bluetooth
-     # init.rc does not yet support applying capabilities, so run as root and
-     # let bluetoothd drop uid to bluetooth with the right linux capabilities
--    group bluetooth net_bt_admin misc
-     disabled
- 
- service hfag /system/bin/sdptool add --channel=10 HFAG
--    user bluetooth
--    group bluetooth net_bt_admin
-     disabled
-     oneshot
- 
- service hsag /system/bin/sdptool add --channel=11 HSAG
--    user bluetooth
--    group bluetooth net_bt_admin
-     disabled
-     oneshot
- 
- service opush /system/bin/sdptool add --channel=12 OPUSH
--    user bluetooth
--    group bluetooth net_bt_admin
-     disabled
-     oneshot
- 
- service pbap /system/bin/sdptool add --channel=19 PBAP
--    user bluetooth
--    group bluetooth net_bt_admin
-     disabled
-     oneshot
- 
-@@ -388,20 +351,15 @@ service flash_recovery /system/etc/install-recovery.sh
- service racoon /system/bin/racoon
-     socket racoon stream 600 system system
-     # racoon will setuid to vpn after getting necessary resources.
--    group net_admin
-     disabled
-     oneshot
- 
- service mtpd /system/bin/mtpd
-     socket mtpd stream 600 system system
--    user vpn
--    group vpn net_admin net_raw
-     disabled
-     oneshot
- 
- service keystore /system/bin/keystore /data/misc/keystore
--    user keystore
--    group keystore
-     socket keystore stream 666
- 
- service dumpstate /system/bin/dumpstate -s
 
 project system/extras/
 diff --git a/system/extras/procrank/Android.mk b/system/extras/procrank/Android.mk
