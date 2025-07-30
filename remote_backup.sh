@@ -26,9 +26,9 @@ show_machinelist () {
   echo "----------------------------------------------------------------"
   echo "What type of system would you like to backup?"
   echo
-  echo "1. LF1000 (Leapster Explorer, Didj, LeapPad Explorer)"
+  echo "1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)"
   echo "2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)"
-  echo "3. LF3000 (LeapPad 3, LeapPad Platinum)"
+  echo "3. LF3000 (Currently Unsupported)"
 }
 
 boot_surgeon () {
@@ -37,9 +37,9 @@ boot_surgeon () {
   echo "Booting the Surgeon environment..."
   python make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf
   python boot_surgeon.py surgeon_tmp.cbf
-  echo -n "Done! Waiting for Surgeon to come up..."
+  echo "Done! Waiting for Surgeon to come up..."
   rm -rf surgeon_tmp.cbf
-  sleep 15
+  sleep 20
   echo "Done!"
 }
 
@@ -47,7 +47,7 @@ nand_part_detect () {
   KERNEL_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Kernel\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   RFS_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"RFS\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   Bulk_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Bulk\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
-  echo "Detected Kernel partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION Bulk Partition=$Bulk_PARTITION"
+  echo "Detected Kernel Partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION Bulk Partition=$Bulk_PARTITION"
 }
 
 backup_nand () {
@@ -67,7 +67,7 @@ backup_nand () {
   nand_part_detect
   for mtd in $(${SSH} "ls /dev/mtd*"); do echo $mtd; ubi=$(basename $mtd); echo "/dev/$ubi -> $prefix$ubi"; ${SSH} "dd if=$mtd" | dd of=$prefix$ubi status=progress; done
   echo "Done! Rebooting your LeapFrog Device."
-  ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  ${SSH} "reboot -f"
 }
 
 
@@ -77,22 +77,18 @@ backup_mmc () {
   ${SSH} -o "StrictHostKeyChecking no" 'test'
   for mtd in $(${SSH} "ls /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo "/dev/$ubi -> $prefix$ubi"; ${SSH} "dd if=$mtd" | dd of=$prefix$ubi status=progress; done
   echo "Done! Rebooting your LeapFrog Device."
-  ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  ${SSH} "reboot -f"
 }
 
 show_warning
-prefix=$1
-if [ -z "$prefix" ]
-then
-  show_machinelist
-  read -p "Enter choice (1 - 3)" choice
-  case $choice in
-    1) prefix="lf1000_" ;;
-    2) prefix="lf2000_" ;;
-    3) prefix="lf3000_" ;;
-    *) echo -e "Unknown choice!" && exit 1
-  esac
-fi
+show_machinelist
+read -p "Enter choice (1 - 3)" choice
+case $choice in
+  1) prefix="lf1000_" ;;
+  2) prefix="lf2000_" ;;
+  3) prefix="lf3000_" ;;
+  *) echo "Unknown choice!" && exit 1
+esac
 
 if [ $prefix == "lf3000_" ]; then
 	backup_mmc $prefix

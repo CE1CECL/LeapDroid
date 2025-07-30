@@ -1,4 +1,19 @@
 
+project bionic/
+diff --git a/bionic/libc/Android.mk b/bionic/libc/Android.mk
+index 49c8731..bdc4f07 100644
+--- a/bionic/libc/Android.mk
++++ b/bionic/libc/Android.mk
+@@ -514,7 +514,7 @@ else # !arm
+ 
+     # Enable recent IA friendly memory routines (such as for Atom)
+     # These will not work on the earlier x86 machines
+-    libc_common_cflags += -mtune=i686 -DUSE_SSSE3 -DUSE_SSE2
++    libc_common_cflags += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse3
+   endif # x86
+ endif # !arm
+ 
+
 project build/
 diff --git a/build/core/combo/HOST_linux-x86.mk b/build/core/combo/HOST_linux-x86.mk
 index c7d65b3..2428617 100644
@@ -13,7 +28,7 @@ index c7d65b3..2428617 100644
  
  HOST_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 diff --git a/build/core/combo/TARGET_linux-x86.mk b/build/core/combo/TARGET_linux-x86.mk
-index 0fb6edc..a400394 100644
+index 0fb6edc..ec26c37 100644
 --- a/build/core/combo/TARGET_linux-x86.mk
 +++ b/build/core/combo/TARGET_linux-x86.mk
 @@ -95,11 +95,7 @@ TARGET_GLOBAL_CFLAGS += \
@@ -25,7 +40,7 @@ index 0fb6edc..a400394 100644
 -else
 -    TARGET_GLOBAL_CFLAGS += -march=i686
 -endif
-+TARGET_GLOBAL_CFLAGS += -march=i486
++TARGET_GLOBAL_CFLAGS += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse3
  
  TARGET_GLOBAL_CFLAGS += -mbionic
  TARGET_GLOBAL_CFLAGS += -D__ANDROID__
@@ -103,6 +118,15 @@ index 0ca3ec6..f6b69f0 100644
  
  # Note: Hard coding the 'tune' value here is probably not ideal,
  # and a better solution should be found in the future.
+diff --git a/build/core/proguard.flags b/build/core/proguard.flags
+index 447e7c5..28c6a85 100644
+--- a/build/core/proguard.flags
++++ b/build/core/proguard.flags
+@@ -71,3 +71,4 @@
+ #}
+ 
+ 
++-ignorewarnings
 diff --git a/build/target/board/emulator/BoardConfig.mk b/build/target/board/emulator/BoardConfig.mk
 index 9ab607a..5a0b549 100644
 --- a/build/target/board/emulator/BoardConfig.mk
@@ -114,10 +138,10 @@ index 9ab607a..5a0b549 100644
 -USE_CAMERA_STUB := true
 +USE_CAMERA_STUB := false
 diff --git a/build/target/board/generic/BoardConfig.mk b/build/target/board/generic/BoardConfig.mk
-index 57e60d3..2c67afe 100644
+index 57e60d3..1064d6e 100644
 --- a/build/target/board/generic/BoardConfig.mk
 +++ b/build/target/board/generic/BoardConfig.mk
-@@ -21,12 +21,17 @@ TARGET_NO_KERNEL := true
+@@ -21,12 +21,18 @@ TARGET_NO_KERNEL := true
  TARGET_ARCH_VARIANT := armv7-a
  TARGET_CPU_ABI := armeabi-v7a
  TARGET_CPU_ABI2 := armeabi
@@ -131,6 +155,7 @@ index 57e60d3..2c67afe 100644
 -HAVE_HTC_AUDIO_DRIVER := true
 -BOARD_USES_GENERIC_AUDIO := true
 +BOARD_USES_GENERIC_AUDIO := false
++BOARD_WPA_SUPPLICANT_DRIVER := WEXT
  
  # no hardware camera
 -USE_CAMERA_STUB := true
@@ -138,7 +163,7 @@ index 57e60d3..2c67afe 100644
  
  # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
  TARGET_SHELL := ash
-@@ -38,8 +43,8 @@ WITH_DEXPREOPT := true
+@@ -38,8 +44,8 @@ WITH_DEXPREOPT := true
  endif
  
  # Build OpenGLES emulation guest and host libraries
@@ -149,11 +174,23 @@ index 57e60d3..2c67afe 100644
  # the GLES renderer disables itself if host GL acceleration isn't available.
 -USE_OPENGL_RENDERER := true
 +USE_OPENGL_RENDERER := false
+diff --git a/build/target/board/generic/device.mk b/build/target/board/generic/device.mk
+index 4edcc19..284e40b 100644
+--- a/build/target/board/generic/device.mk
++++ b/build/target/board/generic/device.mk
+@@ -23,6 +23,7 @@ PRODUCT_PROPERTY_OVERRIDES := \
+     ro.adb.qemud=1
+ 
+ PRODUCT_COPY_FILES := \
++    external/wpa_supplicant/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
+     development/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
+     development/data/etc/vold.conf:system/etc/vold.conf \
+     development/tools/emulator/system/camera/media_profiles.xml:system/etc/media_profiles.xml \
 diff --git a/build/target/board/generic_armv5/BoardConfig.mk b/build/target/board/generic_armv5/BoardConfig.mk
-index d8fa2fe..21a6b2d 100644
+index d8fa2fe..626bc30 100644
 --- a/build/target/board/generic_armv5/BoardConfig.mk
 +++ b/build/target/board/generic_armv5/BoardConfig.mk
-@@ -19,5 +19,11 @@ include build/target/board/generic/BoardConfig.mk
+@@ -19,5 +19,10 @@ include build/target/board/generic/BoardConfig.mk
  TARGET_ARCH_VARIANT :=
  TARGET_CPU_ABI := armeabi
  TARGET_CPU_ABI2 :=
@@ -164,12 +201,12 @@ index d8fa2fe..21a6b2d 100644
 +ARCH_ARM_HAVE_VFP := false
 +ARCH_ARM_HAVE_VFP_D32 := false
  
- WITH_DEXPREOPT := false
+-WITH_DEXPREOPT := false
 diff --git a/build/target/board/generic_x86/BoardConfig.mk b/build/target/board/generic_x86/BoardConfig.mk
-index c62b0a4..2e9d9a6 100644
+index c62b0a4..5fbe4df 100644
 --- a/build/target/board/generic_x86/BoardConfig.mk
 +++ b/build/target/board/generic_x86/BoardConfig.mk
-@@ -8,15 +8,13 @@ TARGET_NO_BOOTLOADER := true
+@@ -8,15 +8,15 @@ TARGET_NO_BOOTLOADER := true
  TARGET_NO_KERNEL := true
  TARGET_CPU_ABI := x86
  TARGET_ARCH := x86
@@ -181,6 +218,8 @@ index c62b0a4..2e9d9a6 100644
 -HAVE_HTC_AUDIO_DRIVER := true
 -BOARD_USES_GENERIC_AUDIO := true
 +BOARD_USES_GENERIC_AUDIO := false
++BOARD_WPA_SUPPLICANT_DRIVER := WEXT
++PRODUCT_COPY_FILES := external/wpa_supplicant/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
  
  # no hardware camera
 -USE_CAMERA_STUB := true
@@ -188,7 +227,7 @@ index c62b0a4..2e9d9a6 100644
  
  # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
  TARGET_SHELL := ash
-@@ -28,8 +26,8 @@ WITH_DEXPREOPT := true
+@@ -28,8 +28,8 @@ WITH_DEXPREOPT := true
  endif
  
  # Build OpenGLES emulation host and guest libraries
@@ -229,6 +268,39 @@ index 0f1956b..a328133 100644
 +PRODUCT_DEVICE := generic_armv5
  PRODUCT_BRAND := Android
  PRODUCT_MODEL := Full Android on Emulator
+diff --git a/build/target/product/full_base.mk b/build/target/product/full_base.mk
+index d89af51..9c436bb 100644
+--- a/build/target/product/full_base.mk
++++ b/build/target/product/full_base.mk
+@@ -24,11 +24,7 @@ PRODUCT_PACKAGES := \
+     libdrmframework \
+     libdrmframework_jni \
+     libfwdlockengine \
+-    OpenWnn \
+-    PinyinIME \
+-    libWnnEngDic \
+-    libWnnJpnDic \
+-    libwnndict \
++    lights.default \
+     VideoEditor \
+     WAPPushManager
+ 
+diff --git a/build/target/product/full_x86.mk b/build/target/product/full_x86.mk
+index c7a4cfb..56021ad 100644
+--- a/build/target/product/full_x86.mk
++++ b/build/target/product/full_x86.mk
+@@ -32,11 +32,6 @@ PRODUCT_PACKAGES := \
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
+ $(call inherit-product, $(SRC_TARGET_DIR)/board/generic_x86/device.mk)
+ 
+-# Ensure we package the BIOS files too.
+-PRODUCT_PACKAGES += \
+-	bios.bin \
+-	vgabios-cirrus.bin \
+-
+ # Overrides
+ PRODUCT_NAME := full_x86
+ PRODUCT_DEVICE := generic_x86
 
 project device/samsung/crespo/
 diff --git a/device/samsung/crespo/libaudio/Android.mk b/device/samsung/crespo/libaudio/Android.mk
@@ -253,6 +325,85 @@ index cbb925c..3ae0588 100644
  LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
  LOCAL_MODULE_TAGS := optional
  
+diff --git a/device/samsung/crespo/libaudio/AudioHardware.h b/device/samsung/crespo/libaudio/AudioHardware.h
+index a183a98..1134bd3 100644
+--- a/device/samsung/crespo/libaudio/AudioHardware.h
++++ b/device/samsung/crespo/libaudio/AudioHardware.h
+@@ -51,28 +51,28 @@ namespace android_audio_legacy {
+ // Additionnal latency introduced by audio DSP and hardware in ms
+ #define AUDIO_HW_OUT_LATENCY_MS 0
+ // Default audio output sample rate
+-#define AUDIO_HW_OUT_SAMPLERATE 44100
++#define AUDIO_HW_OUT_SAMPLERATE 32000
+ // Default audio output channel mask
+ #define AUDIO_HW_OUT_CHANNELS (AudioSystem::CHANNEL_OUT_STEREO)
+ // Default audio output sample format
+ #define AUDIO_HW_OUT_FORMAT (AudioSystem::PCM_16_BIT)
+-// Kernel pcm out buffer size in frames at 44.1kHz
++// Kernel pcm out buffer size in frames at 32kHz
+ #define AUDIO_HW_OUT_PERIOD_SZ 1024
+ #define AUDIO_HW_OUT_PERIOD_CNT 4
+-// Default audio output buffer size in bytes
++// Default audio output buffer size in bytes (32kHz stereo)
+ #define AUDIO_HW_OUT_PERIOD_BYTES (AUDIO_HW_OUT_PERIOD_SZ * 2 * sizeof(int16_t))
+ 
+ // Default audio input sample rate
+-#define AUDIO_HW_IN_SAMPLERATE 44100
++#define AUDIO_HW_IN_SAMPLERATE 32000
+ // Default audio input channel mask
+-#define AUDIO_HW_IN_CHANNELS (AudioSystem::CHANNEL_IN_MONO)
++#define AUDIO_HW_IN_CHANNELS (AudioSystem::CHANNEL_OUT_STEREO)
+ // Default audio input sample format
+ #define AUDIO_HW_IN_FORMAT (AudioSystem::PCM_16_BIT)
+-// Kernel pcm in buffer size in frames at 44.1kHz (before resampling)
++// Kernel pcm in buffer size in frames at 32kHz (before resampling)
+ #define AUDIO_HW_IN_PERIOD_SZ 1024
+ #define AUDIO_HW_IN_PERIOD_CNT 4
+-// Default audio input buffer size in bytes (8kHz mono)
+-#define AUDIO_HW_IN_PERIOD_BYTES ((AUDIO_HW_IN_PERIOD_SZ*sizeof(int16_t))/8)
++// Default audio input buffer size in bytes (32kHz stereo)
++#define AUDIO_HW_IN_PERIOD_BYTES (AUDIO_HW_IN_PERIOD_SZ * 2 * sizeof(int16_t))
+ 
+ 
+ class AudioHardware : public AudioHardwareBase
+diff --git a/device/samsung/crespo/liblight/Android.mk b/device/samsung/crespo/liblight/Android.mk
+index b799a63..2185d92 100755
+--- a/device/samsung/crespo/liblight/Android.mk
++++ b/device/samsung/crespo/liblight/Android.mk
+@@ -12,8 +12,6 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
+-ifneq ($(filter crespo crespo4g,$(TARGET_DEVICE)),)
+-
+ LOCAL_PATH:= $(call my-dir)
+ # HAL module implemenation stored in
+ # hw/<COPYPIX_HARDWARE_MODULE_ID>.<ro.board.platform>.so
+@@ -26,10 +24,8 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ 
+ LOCAL_SHARED_LIBRARIES := liblog
+ 
+-LOCAL_MODULE := lights.$(TARGET_BOARD_PLATFORM)
++LOCAL_MODULE := lights.default
+ 
+ LOCAL_MODULE_TAGS := optional
+ 
+ include $(BUILD_SHARED_LIBRARY)
+-
+-endif
+diff --git a/device/samsung/crespo/liblight/lights.c b/device/samsung/crespo/liblight/lights.c
+index ee6416a..231b668 100755
+--- a/device/samsung/crespo/liblight/lights.c
++++ b/device/samsung/crespo/liblight/lights.c
+@@ -28,7 +28,7 @@
+ static pthread_once_t g_init = PTHREAD_ONCE_INIT;
+ static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
+ 
+-char const *const LCD_FILE = "/sys/class/backlight/s5p_bl/brightness";
++char const *const LCD_FILE = "/sys/class/backlight/*/brightness";
+ 
+ static int write_int(char const *path, int value)
+ {
 
 project external/webrtc/
 diff --git a/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h b/external/webrtc/src/common_audio/signal_processing_library/main/interface/spl_inl.h
@@ -371,23 +522,33 @@ index 71f3cf51..6b79a24c 100644
  
      @SuppressWarnings({"deprecation"})
 diff --git a/frameworks/base/core/jni/AndroidRuntime.cpp b/frameworks/base/core/jni/AndroidRuntime.cpp
-index c00e6c9a..5d75da68 100644
+index c00e6c9a..22ac8718 100644
 --- a/frameworks/base/core/jni/AndroidRuntime.cpp
 +++ b/frameworks/base/core/jni/AndroidRuntime.cpp
-@@ -557,11 +557,11 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
+@@ -557,13 +557,17 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
       * values should be specified in a product property override.
       */
      strcpy(heapstartsizeOptsBuf, "-Xms");
 -    property_get("dalvik.vm.heapstartsize", heapstartsizeOptsBuf+4, "4m");
-+    property_get("dalvik.vm.heapstartsize", heapstartsizeOptsBuf+4, "1m");
-     opt.optionString = heapstartsizeOptsBuf;
-     mOptions.add(opt);
+-    opt.optionString = heapstartsizeOptsBuf;
+-    mOptions.add(opt);
++    property_get("dalvik.vm.heapstartsize", heapstartsizeOptsBuf+4, "");
++    if (heapstartsizeOptsBuf[4] != '\0') {
++        opt.optionString = heapstartsizeOptsBuf;
++        mOptions.add(opt);
++    }
      strcpy(heapsizeOptsBuf, "-Xmx");
 -    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "16m");
+-    opt.optionString = heapsizeOptsBuf;
+-    mOptions.add(opt);
 +    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "18m");
-     opt.optionString = heapsizeOptsBuf;
-     mOptions.add(opt);
++    if (heapsizeOptsBuf[4] != '\0') {
++        opt.optionString = heapsizeOptsBuf;
++        mOptions.add(opt);
++    }
  
+     strcpy(heapgrowthlimitOptsBuf, "-XX:HeapGrowthLimit=");
+     property_get("dalvik.vm.heapgrowthlimit", heapgrowthlimitOptsBuf+20, "");
 diff --git a/frameworks/base/core/res/res/values/config.xml b/frameworks/base/core/res/res/values/config.xml
 index 24afe15c..f9d6fb5d 100755
 --- a/frameworks/base/core/res/res/values/config.xml
@@ -583,6 +744,41 @@ index 52897417..8427e29f 100644
  #else
                          event->when = now;
  #endif
+diff --git a/frameworks/base/services/input/InputReader.cpp b/frameworks/base/services/input/InputReader.cpp
+index b34ff255..e086f63b 100644
+--- a/frameworks/base/services/input/InputReader.cpp
++++ b/frameworks/base/services/input/InputReader.cpp
+@@ -2539,7 +2539,7 @@ void TouchInputMapper::configureParameters() {
+         mParameters.deviceType = Parameters::DEVICE_TYPE_TOUCH_PAD;
+     } else {
+         // The device is a touch pad of unknown purpose.
+-        mParameters.deviceType = Parameters::DEVICE_TYPE_POINTER;
++        mParameters.deviceType = Parameters::DEVICE_TYPE_TOUCH_SCREEN;
+     }
+ 
+     String8 deviceTypeString;
+diff --git a/frameworks/base/services/java/com/android/server/PowerManagerService.java b/frameworks/base/services/java/com/android/server/PowerManagerService.java
+index 2a0d2a08..c7d3248d 100644
+--- a/frameworks/base/services/java/com/android/server/PowerManagerService.java
++++ b/frameworks/base/services/java/com/android/server/PowerManagerService.java
+@@ -163,7 +163,7 @@ public class PowerManagerService extends IPowerManager.Stub
+ 
+     private boolean mDoneBooting = false;
+     private boolean mBootCompleted = false;
+-    private int mStayOnConditions = 0;
++    private int mStayOnConditions = -1;
+     private final int[] mBroadcastQueue = new int[] { -1, -1, -1 };
+     private final int[] mBroadcastWhy = new int[3];
+     private boolean mPreparingForScreenOn = false;
+@@ -450,8 +450,6 @@ public class PowerManagerService extends IPowerManager.Stub
+         public void update(Observable o, Object arg) {
+             synchronized (mLocks) {
+                 // STAY_ON_WHILE_PLUGGED_IN, default to when plugged into AC
+-                mStayOnConditions = getInt(STAY_ON_WHILE_PLUGGED_IN,
+-                        BatteryManager.BATTERY_PLUGGED_AC);
+                 updateWakeLockLocked();
+ 
+                 // SCREEN_OFF_TIMEOUT, default to 15 seconds
 diff --git a/frameworks/base/services/java/com/android/server/pm/PackageManagerService.java b/frameworks/base/services/java/com/android/server/pm/PackageManagerService.java
 index 6b61c47d..b8a3ebf2 100644
 --- a/frameworks/base/services/java/com/android/server/pm/PackageManagerService.java
@@ -757,6 +953,32 @@ index ef41374..7533fd9 100644
  LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
  LOCAL_MODULE_TAGS := optional
  
+diff --git a/hardware/libhardware_legacy/wifi/wifi.c b/hardware/libhardware_legacy/wifi/wifi.c
+index 37cbb1e..f9a734e 100644
+--- a/hardware/libhardware_legacy/wifi/wifi.c
++++ b/hardware/libhardware_legacy/wifi/wifi.c
+@@ -53,13 +53,19 @@ static char iface[PROPERTY_VALUE_MAX];
+ // TODO: use new ANDROID_SOCKET mechanism, once support for multiple
+ // sockets is in
+ 
++#ifndef WIFI_DRIVER_MODULE_PATH
++#define WIFI_DRIVER_MODULE_PATH         "/system/lib/modules/3.4.39/kernel/drivers/net/wireless/arcadyan/dhd.ko"
++#endif
++#ifndef WIFI_DRIVER_MODULE_NAME
++#define WIFI_DRIVER_MODULE_NAME         "dhd"
++#endif
+ #ifndef WIFI_DRIVER_MODULE_ARG
+-#define WIFI_DRIVER_MODULE_ARG          ""
++#define WIFI_DRIVER_MODULE_ARG          "firmware_path=/system/lib/firmware/arcadyan/bcm4319.bin nvram_path=/system/lib/firmware/arcadyan/nvram.fw iface_name=wlan0 dhd_watchdog_ms=100"
+ #endif
+ #ifndef WIFI_FIRMWARE_LOADER
+ #define WIFI_FIRMWARE_LOADER		""
+ #endif
+-#define WIFI_TEST_INTERFACE		"sta"
++#define WIFI_TEST_INTERFACE		"wlan0"
+ 
+ #ifndef WIFI_DRIVER_FW_PATH_STA
+ #define WIFI_DRIVER_FW_PATH_STA		NULL
 
 project packages/apps/Launcher2/
 diff --git a/packages/apps/Launcher2/res/values-sw600dp/config.xml b/packages/apps/Launcher2/res/values-sw600dp/config.xml
@@ -784,7 +1006,7 @@ index 7ab9870..532af53 100644
 
 project system/core/
 diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
-index 840faa5..8eae983 100644
+index 840faa5..2e4d193 100644
 --- a/system/core/rootdir/init.rc
 +++ b/system/core/rootdir/init.rc
 @@ -6,12 +6,16 @@ on early-init
@@ -833,7 +1055,13 @@ index 840faa5..8eae983 100644
  
      # We chown/chmod /cache again so because mount is run as root + defaults
      chown system cache /cache
-@@ -160,6 +156,7 @@ on post-fs-data
+@@ -156,10 +152,13 @@ on post-fs-data
+     mkdir /data/misc/systemkeys 0700 system system
+     # give system access to wpa_supplicant.conf for backup and restore
+     mkdir /data/misc/wifi 0770 wifi wifi
++    mkdir /data/misc/wifi/sockets 0770 wifi wifi
++    mkdir /data/misc/dhcp 0770 dhcp dhcp
+     chmod 0660 /data/misc/wifi/wpa_supplicant.conf
      mkdir /data/local 0751 root root
      mkdir /data/local/tmp 0771 shell shell
      mkdir /data/data 0771 system system
@@ -841,6 +1069,27 @@ index 840faa5..8eae983 100644
      mkdir /data/app-private 0771 system system
      mkdir /data/app 0771 system system
      mkdir /data/property 0700 root root
+@@ -350,8 +349,18 @@ service console /system/bin/sh
+     user shell
+     group log
+ 
+-on property:ro.debuggable=1
+-    start console
++service wpa_supplicant /system/bin/wpa_supplicant -Dwext -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf
++    socket wpa_wlan0 dgram 0660 wifi wifi
++    disabled
++    oneshot
++
++service dhcpcd_wlan0 /system/bin/dhcpcd -ABKL
++    disabled
++    oneshot
++
++service iprenew_wlan0 /system/bin/dhcpcd -n
++    disabled
++    oneshot
+ 
+ # adbd is controlled via property triggers in init.<platform>.usb.rc
+ service adbd /sbin/adbd
 
 project system/extras/
 diff --git a/system/extras/su/su.c b/system/extras/su/su.c

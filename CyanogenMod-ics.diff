@@ -1,0 +1,1240 @@
+
+project bionic/
+diff --git a/bionic/libc/Android.mk b/bionic/libc/Android.mk
+index ae54004..b017bc9 100644
+--- a/bionic/libc/Android.mk
++++ b/bionic/libc/Android.mk
+@@ -558,8 +558,11 @@ ifeq ($(TARGET_ARCH),arm)
+   endif
+ else # !arm
+   ifeq ($(TARGET_ARCH),x86)
+-    libc_crt_target_cflags :=
+-    # TARGET_GLOBAL_CFLAGS from build/core/combo/TARGET_linux-x86.mk sets all required flags.
++    libc_crt_target_cflags := -m32
++
++    # Enable recent IA friendly memory routines (such as for Atom)
++    # These will not work on the earlier x86 machines
++    libc_common_cflags += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse3
+   endif # x86
+ endif # !arm
+ 
+
+project build/
+diff --git a/build/core/combo/TARGET_linux-x86.mk b/build/core/combo/TARGET_linux-x86.mk
+index 0fb6edc..ec26c37 100644
+--- a/build/core/combo/TARGET_linux-x86.mk
++++ b/build/core/combo/TARGET_linux-x86.mk
+@@ -95,11 +95,7 @@ TARGET_GLOBAL_CFLAGS += \
+ TARGET_GLOBAL_CPPFLAGS += \
+ 			-fno-use-cxa-atexit
+ 
+-ifeq ($(TARGET_ARCH_VARIANT),x86-atom)
+-    TARGET_GLOBAL_CFLAGS += -march=atom -mstackrealign -DUSE_SSSE3 -DUSE_SSE2 -mfpmath=sse
+-else
+-    TARGET_GLOBAL_CFLAGS += -march=i686
+-endif
++TARGET_GLOBAL_CFLAGS += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse3
+ 
+ TARGET_GLOBAL_CFLAGS += -mbionic
+ TARGET_GLOBAL_CFLAGS += -D__ANDROID__
+diff --git a/build/core/combo/arch/arm/armv4t.mk b/build/core/combo/arch/arm/armv4t.mk
+index abc8fa2..aefb9b0 100644
+--- a/build/core/combo/arch/arm/armv4t.mk
++++ b/build/core/combo/arch/arm/armv4t.mk
+@@ -8,12 +8,6 @@
+ # not supported.
+ #
+ $(warning ARMv4t support is currently a work in progress. It does not work right now!)
+-ARCH_ARM_HAVE_THUMB_SUPPORT := false
+-ARCH_ARM_HAVE_THUMB_INTERWORKING := false
+-ARCH_ARM_HAVE_64BIT_DATA := false
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := false
+-ARCH_ARM_HAVE_CLZ := false
+-ARCH_ARM_HAVE_FFS := false
+ 
+ DEFAULT_TARGET_CPU := arm920t
+ 
+diff --git a/build/core/combo/arch/arm/armv5te.mk b/build/core/combo/arch/arm/armv5te.mk
+index 29aada6..88e57b7 100644
+--- a/build/core/combo/arch/arm/armv5te.mk
++++ b/build/core/combo/arch/arm/armv5te.mk
+@@ -1,12 +1,6 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv5TE architecture and higher
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+ 
+ # Note: Hard coding the 'tune' value here is probably not ideal,
+ # and a better solution should be found in the future.
+diff --git a/build/core/combo/arch/arm/armv6-vfp.mk b/build/core/combo/arch/arm/armv6-vfp.mk
+index a00a2d1..a2bd39d 100644
+--- a/build/core/combo/arch/arm/armv6-vfp.mk
++++ b/build/core/combo/arch/arm/armv6-vfp.mk
+@@ -1,13 +1,6 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv6-VFP architecture and higher
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+-ARCH_ARM_HAVE_VFP               := true
+ 
+ ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
+ TARGET_ARCH_VARIANT_FPU         := vfp
+diff --git a/build/core/combo/arch/arm/armv6j.mk b/build/core/combo/arch/arm/armv6j.mk
+index beca884..7c6a377 100644
+--- a/build/core/combo/arch/arm/armv6j.mk
++++ b/build/core/combo/arch/arm/armv6j.mk
+@@ -1,12 +1,6 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv6J architecture and higher
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+ 
+ # Note: Hard coding the 'tune' value here is probably not ideal,
+ # and a better solution should be found in the future.
+diff --git a/build/core/combo/arch/arm/armv7-a-neon.mk b/build/core/combo/arch/arm/armv7-a-neon.mk
+index 7b5b8ed..746bca2 100644
+--- a/build/core/combo/arch/arm/armv7-a-neon.mk
++++ b/build/core/combo/arch/arm/armv7-a-neon.mk
+@@ -1,16 +1,6 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv7-a architecture and higher with NEON
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+-ARCH_ARM_HAVE_ARMV7A            := true
+-ARCH_ARM_HAVE_VFP               := true
+-ARCH_ARM_HAVE_VFP_D32           := true
+-ARCH_ARM_HAVE_NEON              := true
+ 
+ # Note: Hard coding the 'tune' value here is probably not ideal,
+ # and a better solution should be found in the future.
+diff --git a/build/core/combo/arch/arm/armv7-a.mk b/build/core/combo/arch/arm/armv7-a.mk
+index 5e2f0bf..140b447 100644
+--- a/build/core/combo/arch/arm/armv7-a.mk
++++ b/build/core/combo/arch/arm/armv7-a.mk
+@@ -1,25 +1,15 @@
+ # Configuration for Linux on ARM.
+ # Generating binaries for the ARMv7-a architecture and higher
+ #
+-ARCH_ARM_HAVE_THUMB_SUPPORT     := true
+-ARCH_ARM_HAVE_FAST_INTERWORKING := true
+-ARCH_ARM_HAVE_64BIT_DATA        := true
+-ARCH_ARM_HAVE_HALFWORD_MULTIPLY := true
+-ARCH_ARM_HAVE_CLZ               := true
+-ARCH_ARM_HAVE_FFS               := true
+-ARCH_ARM_HAVE_ARMV7A            := true
+ ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU)),none)
+-ARCH_ARM_HAVE_VFP               := true
+ else
+-ARCH_ARM_HAVE_VFP               := false
+ endif
+ 
+ ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
+-TARGET_ARCH_VARIANT_FPU         := neon
++TARGET_ARCH_VARIANT_FPU         := vfpv3-d16
+ endif
+ 
+ ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),neon)
+-ARCH_ARM_HAVE_NEON              := true
+ endif
+ 
+ ifeq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
+@@ -27,7 +17,6 @@ TARGET_ARCH_VARIANT_CPU         := cortex-a8
+ endif
+ 
+ ifeq ($(strip $(TARGET_CPU_SMP)),true)
+-ARCH_ARM_HAVE_TLS_REGISTER      := true
+ endif
+ 
+ arch_variant_cflags := \
+diff --git a/build/core/proguard.flags b/build/core/proguard.flags
+index 447e7c5..28c6a85 100644
+--- a/build/core/proguard.flags
++++ b/build/core/proguard.flags
+@@ -71,3 +71,4 @@
+ #}
+ 
+ 
++-ignorewarnings
+diff --git a/build/target/board/emulator/BoardConfig.mk b/build/target/board/emulator/BoardConfig.mk
+index 9ab607a..e19e161 100644
+--- a/build/target/board/emulator/BoardConfig.mk
++++ b/build/target/board/emulator/BoardConfig.mk
+@@ -6,7 +6,5 @@
+ # The generic product target doesn't have any hardware-specific pieces.
+ TARGET_NO_BOOTLOADER := true
+ TARGET_NO_KERNEL := true
+-HAVE_HTC_AUDIO_DRIVER := true
+ 
+-# no hardware camera
+-USE_CAMERA_STUB := true
++USE_CAMERA_STUB := false
+diff --git a/build/target/board/generic/BoardConfig.mk b/build/target/board/generic/BoardConfig.mk
+index 57e60d3..b43bfb4 100644
+--- a/build/target/board/generic/BoardConfig.mk
++++ b/build/target/board/generic/BoardConfig.mk
+@@ -21,12 +21,18 @@ TARGET_NO_KERNEL := true
+ TARGET_ARCH_VARIANT := armv7-a
+ TARGET_CPU_ABI := armeabi-v7a
+ TARGET_CPU_ABI2 := armeabi
++ARCH_ARM_HAVE_ARMV7A := true
++ARCH_ARM_HAVE_ARMV7A_BUG := false
++ARCH_ARM_HAVE_NEON := false
++ARCH_ARM_HAVE_THUMB_SUPPORT := true
++ARCH_ARM_HAVE_TLS_REGISTER := true
++ARCH_ARM_HAVE_VFP := true
++ARCH_ARM_HAVE_VFP_D32 := false
+ 
+-HAVE_HTC_AUDIO_DRIVER := true
+-BOARD_USES_GENERIC_AUDIO := true
++BOARD_USES_GENERIC_AUDIO := false
++BOARD_WPA_SUPPLICANT_DRIVER := WEXT
+ 
+-# no hardware camera
+-USE_CAMERA_STUB := true
++USE_CAMERA_STUB := false
+ 
+ # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
+ TARGET_SHELL := ash
+@@ -37,9 +43,6 @@ ifeq ($(HOST_OS),linux)
+ WITH_DEXPREOPT := true
+ endif
+ 
+-# Build OpenGLES emulation guest and host libraries
+-BUILD_EMULATOR_OPENGL := true
++BUILD_EMULATOR_OPENGL := false
+ 
+-# Build and enable the OpenGL ES View renderer. When running on the emulator,
+-# the GLES renderer disables itself if host GL acceleration isn't available.
+-USE_OPENGL_RENDERER := true
++USE_OPENGL_RENDERER := false
+diff --git a/build/target/board/generic/device.mk b/build/target/board/generic/device.mk
+index 4edcc19..284e40b 100644
+--- a/build/target/board/generic/device.mk
++++ b/build/target/board/generic/device.mk
+@@ -23,6 +23,7 @@ PRODUCT_PROPERTY_OVERRIDES := \
+     ro.adb.qemud=1
+ 
+ PRODUCT_COPY_FILES := \
++    external/wpa_supplicant/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
+     development/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
+     development/data/etc/vold.conf:system/etc/vold.conf \
+     development/tools/emulator/system/camera/media_profiles.xml:system/etc/media_profiles.xml \
+diff --git a/build/target/board/generic_armv5/BoardConfig.mk b/build/target/board/generic_armv5/BoardConfig.mk
+index d8fa2fe..009392a 100644
+--- a/build/target/board/generic_armv5/BoardConfig.mk
++++ b/build/target/board/generic_armv5/BoardConfig.mk
+@@ -19,5 +19,11 @@ include build/target/board/generic/BoardConfig.mk
+ TARGET_ARCH_VARIANT :=
+ TARGET_CPU_ABI := armeabi
+ TARGET_CPU_ABI2 :=
++ARCH_ARM_HAVE_ARMV7A := false
++ARCH_ARM_HAVE_ARMV7A_BUG := false
++ARCH_ARM_HAVE_NEON := false
++ARCH_ARM_HAVE_THUMB_SUPPORT := true
++ARCH_ARM_HAVE_TLS_REGISTER := false
++ARCH_ARM_HAVE_VFP := false
++ARCH_ARM_HAVE_VFP_D32 := false
+ 
+-WITH_DEXPREOPT := false
+diff --git a/build/target/board/generic_x86/BoardConfig.mk b/build/target/board/generic_x86/BoardConfig.mk
+index c62b0a4..c2af6db 100644
+--- a/build/target/board/generic_x86/BoardConfig.mk
++++ b/build/target/board/generic_x86/BoardConfig.mk
+@@ -8,15 +8,14 @@ TARGET_NO_BOOTLOADER := true
+ TARGET_NO_KERNEL := true
+ TARGET_CPU_ABI := x86
+ TARGET_ARCH := x86
+-TARGET_ARCH_VARIANT := x86-atom
++TARGET_ARCH_VARIANT := x86
+ TARGET_PRELINK_MODULE := false
+ 
+-# The IA emulator (qemu) uses the Goldfish devices
+-HAVE_HTC_AUDIO_DRIVER := true
+-BOARD_USES_GENERIC_AUDIO := true
++BOARD_USES_GENERIC_AUDIO := false
++BOARD_WPA_SUPPLICANT_DRIVER := WEXT
++PRODUCT_COPY_FILES := external/wpa_supplicant/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
+ 
+-# no hardware camera
+-USE_CAMERA_STUB := true
++USE_CAMERA_STUB := false
+ 
+ # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
+ TARGET_SHELL := ash
+@@ -27,9 +26,6 @@ ifeq ($(HOST_OS),linux)
+ WITH_DEXPREOPT := true
+ endif
+ 
+-# Build OpenGLES emulation host and guest libraries
+-BUILD_EMULATOR_OPENGL := true
++BUILD_EMULATOR_OPENGL := false
+ 
+-# Build and enable the OpenGL ES View renderer. When running on the emulator,
+-# the GLES renderer disables itself if host GL acceleration isn't available.
+-USE_OPENGL_RENDERER := true
++USE_OPENGL_RENDERER := false
+diff --git a/build/target/board/vbox_x86/BoardConfig.mk b/build/target/board/vbox_x86/BoardConfig.mk
+index 94df57c..cb9dfab 100644
+--- a/build/target/board/vbox_x86/BoardConfig.mk
++++ b/build/target/board/vbox_x86/BoardConfig.mk
+@@ -7,8 +7,8 @@ DISABLE_DEXPREOPT := true
+ TARGET_COMPRESS_MODULE_SYMBOLS := false
+ TARGET_NO_RECOVERY := true
+ TARGET_HARDWARE_3D := false
+-BOARD_USES_GENERIC_AUDIO := true
+-USE_CAMERA_STUB := true
++BOARD_USES_GENERIC_AUDIO := false
++USE_CAMERA_STUB := false
+ TARGET_PROVIDES_INIT_RC := true
+ USE_CUSTOM_RUNTIME_HEAP_MAX := "32M"
+ TARGET_CPU_ABI := x86
+diff --git a/build/target/product/full.mk b/build/target/product/full.mk
+index 0f1956b..31d6c9e 100644
+--- a/build/target/product/full.mk
++++ b/build/target/product/full.mk
+@@ -23,10 +23,11 @@ PRODUCT_PACKAGES := \
+     Camera
+ 
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+-$(call inherit-product, $(SRC_TARGET_DIR)/board/generic/device.mk)
++$(call inherit-product, $(SRC_TARGET_DIR)/board/generic_armv5/device.mk)
++$(call inherit-product-if-exists, vendor/cm/config/common_full_phone.mk)
+ 
+ # Overrides
+ PRODUCT_NAME := full
+-PRODUCT_DEVICE := generic
++PRODUCT_DEVICE := generic_armv5
+ PRODUCT_BRAND := Android
+ PRODUCT_MODEL := Full Android on Emulator
+diff --git a/build/target/product/full_base.mk b/build/target/product/full_base.mk
+index cc492ed..84c35e7 100644
+--- a/build/target/product/full_base.mk
++++ b/build/target/product/full_base.mk
+@@ -24,6 +24,7 @@ PRODUCT_PACKAGES := \
+     libdrmframework \
+     libdrmframework_jni \
+     libfwdlockengine \
++    lights.default \
+     VideoEditor \
+     WAPPushManager
+ 
+diff --git a/build/target/product/full_x86.mk b/build/target/product/full_x86.mk
+index c7a4cfb..272af52 100644
+--- a/build/target/product/full_x86.mk
++++ b/build/target/product/full_x86.mk
+@@ -31,11 +31,7 @@ PRODUCT_PACKAGES := \
+ 
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
+ $(call inherit-product, $(SRC_TARGET_DIR)/board/generic_x86/device.mk)
+-
+-# Ensure we package the BIOS files too.
+-PRODUCT_PACKAGES += \
+-	bios.bin \
+-	vgabios-cirrus.bin \
++$(call inherit-product-if-exists, vendor/cm/config/common_full_phone.mk)
+ 
+ # Overrides
+ PRODUCT_NAME := full_x86
+
+project development/
+diff --git a/development/samples/FmRadioTransmitter/Android.mk b/development/samples/FmRadioTransmitter/Android.mk
+index 0c25b35..42c844f 100755
+--- a/development/samples/FmRadioTransmitter/Android.mk
++++ b/development/samples/FmRadioTransmitter/Android.mk
+@@ -1,3 +1,4 @@
++ifneq (0,0)
+ LOCAL_PATH:= $(call my-dir)
+ include $(CLEAR_VARS)
+ 
+@@ -10,3 +11,4 @@ LOCAL_PACKAGE_NAME := FmRadioTransmitter
+ LOCAL_SDK_VERSION := current
+ 
+ include $(BUILD_PACKAGE)
++endif
+
+project device/samsung/crespo/
+diff --git a/device/samsung/crespo/libaudio/Android.mk b/device/samsung/crespo/libaudio/Android.mk
+index cbb925c..3ae0588 100644
+--- a/device/samsung/crespo/libaudio/Android.mk
++++ b/device/samsung/crespo/libaudio/Android.mk
+@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
+ LOCAL_SRC_FILES:= \
+ 	AudioHardware.cpp
+ 
+-LOCAL_MODULE := audio.primary.herring
++LOCAL_MODULE := audio.primary.default
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_STATIC_LIBRARIES:= libmedia_helper
+ LOCAL_SHARED_LIBRARIES:= \
+@@ -30,7 +30,7 @@ LOCAL_SRC_FILES := AudioPolicyManager.cpp
+ LOCAL_SHARED_LIBRARIES := libcutils libutils libmedia
+ LOCAL_STATIC_LIBRARIES := libmedia_helper
+ LOCAL_WHOLE_STATIC_LIBRARIES := libaudiopolicy_legacy
+-LOCAL_MODULE := audio_policy.herring
++LOCAL_MODULE := audio_policy.default
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_MODULE_TAGS := optional
+ 
+diff --git a/device/samsung/crespo/libaudio/AudioHardware.h b/device/samsung/crespo/libaudio/AudioHardware.h
+index a183a98..1134bd3 100644
+--- a/device/samsung/crespo/libaudio/AudioHardware.h
++++ b/device/samsung/crespo/libaudio/AudioHardware.h
+@@ -51,28 +51,28 @@ namespace android_audio_legacy {
+ // Additionnal latency introduced by audio DSP and hardware in ms
+ #define AUDIO_HW_OUT_LATENCY_MS 0
+ // Default audio output sample rate
+-#define AUDIO_HW_OUT_SAMPLERATE 44100
++#define AUDIO_HW_OUT_SAMPLERATE 32000
+ // Default audio output channel mask
+ #define AUDIO_HW_OUT_CHANNELS (AudioSystem::CHANNEL_OUT_STEREO)
+ // Default audio output sample format
+ #define AUDIO_HW_OUT_FORMAT (AudioSystem::PCM_16_BIT)
+-// Kernel pcm out buffer size in frames at 44.1kHz
++// Kernel pcm out buffer size in frames at 32kHz
+ #define AUDIO_HW_OUT_PERIOD_SZ 1024
+ #define AUDIO_HW_OUT_PERIOD_CNT 4
+-// Default audio output buffer size in bytes
++// Default audio output buffer size in bytes (32kHz stereo)
+ #define AUDIO_HW_OUT_PERIOD_BYTES (AUDIO_HW_OUT_PERIOD_SZ * 2 * sizeof(int16_t))
+ 
+ // Default audio input sample rate
+-#define AUDIO_HW_IN_SAMPLERATE 44100
++#define AUDIO_HW_IN_SAMPLERATE 32000
+ // Default audio input channel mask
+-#define AUDIO_HW_IN_CHANNELS (AudioSystem::CHANNEL_IN_MONO)
++#define AUDIO_HW_IN_CHANNELS (AudioSystem::CHANNEL_OUT_STEREO)
+ // Default audio input sample format
+ #define AUDIO_HW_IN_FORMAT (AudioSystem::PCM_16_BIT)
+-// Kernel pcm in buffer size in frames at 44.1kHz (before resampling)
++// Kernel pcm in buffer size in frames at 32kHz (before resampling)
+ #define AUDIO_HW_IN_PERIOD_SZ 1024
+ #define AUDIO_HW_IN_PERIOD_CNT 4
+-// Default audio input buffer size in bytes (8kHz mono)
+-#define AUDIO_HW_IN_PERIOD_BYTES ((AUDIO_HW_IN_PERIOD_SZ*sizeof(int16_t))/8)
++// Default audio input buffer size in bytes (32kHz stereo)
++#define AUDIO_HW_IN_PERIOD_BYTES (AUDIO_HW_IN_PERIOD_SZ * 2 * sizeof(int16_t))
+ 
+ 
+ class AudioHardware : public AudioHardwareBase
+diff --git a/device/samsung/crespo/liblight/Android.mk b/device/samsung/crespo/liblight/Android.mk
+index b799a63..2185d92 100755
+--- a/device/samsung/crespo/liblight/Android.mk
++++ b/device/samsung/crespo/liblight/Android.mk
+@@ -12,8 +12,6 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
+-ifneq ($(filter crespo crespo4g,$(TARGET_DEVICE)),)
+-
+ LOCAL_PATH:= $(call my-dir)
+ # HAL module implemenation stored in
+ # hw/<COPYPIX_HARDWARE_MODULE_ID>.<ro.board.platform>.so
+@@ -26,10 +24,8 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ 
+ LOCAL_SHARED_LIBRARIES := liblog
+ 
+-LOCAL_MODULE := lights.$(TARGET_BOARD_PLATFORM)
++LOCAL_MODULE := lights.default
+ 
+ LOCAL_MODULE_TAGS := optional
+ 
+ include $(BUILD_SHARED_LIBRARY)
+-
+-endif
+diff --git a/device/samsung/crespo/liblight/lights.c b/device/samsung/crespo/liblight/lights.c
+index ee6416a..231b668 100755
+--- a/device/samsung/crespo/liblight/lights.c
++++ b/device/samsung/crespo/liblight/lights.c
+@@ -28,7 +28,7 @@
+ static pthread_once_t g_init = PTHREAD_ONCE_INIT;
+ static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
+ 
+-char const *const LCD_FILE = "/sys/class/backlight/s5p_bl/brightness";
++char const *const LCD_FILE = "/sys/class/backlight/*/brightness";
+ 
+ static int write_int(char const *path, int value)
+ {
+
+project external/grub/
+diff --git a/external/grub/Android.mk b/external/grub/Android.mk
+index 50034ba..55f6f7c 100644
+--- a/external/grub/Android.mk
++++ b/external/grub/Android.mk
+@@ -1,3 +1,4 @@
++ifneq (0,0)
+ ## Copyright 2008, The Android Open Source Project
+ ##
+ ## Licensed under the Apache License, Version 2.0 (the "License");
+@@ -191,3 +192,4 @@ $(grub_full) : $(grub_stage1) $(grub_stage2)
+ #ALL_PREBUILT += $(grub_full)
+ 
+ endif # x86
++endif
+
+project frameworks/base/
+diff --git a/frameworks/base/core/java/android/app/ActivityManager.java b/frameworks/base/core/java/android/app/ActivityManager.java
+index 0f208095..9d9d1f34 100644
+--- a/frameworks/base/core/java/android/app/ActivityManager.java
++++ b/frameworks/base/core/java/android/app/ActivityManager.java
+@@ -206,7 +206,7 @@ public class ActivityManager {
+     static public int staticGetLargeMemoryClass() {
+         // Really brain dead right now -- just take this from the configured
+         // vm heap size, and assume it is in megabytes and thus ends with "m".
+-        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "16m");
++        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "18m");
+         return Integer.parseInt(vmHeapSize.substring(0, vmHeapSize.length()-1));
+     }
+     
+diff --git a/frameworks/base/core/java/android/view/HardwareRenderer.java b/frameworks/base/core/java/android/view/HardwareRenderer.java
+index a95b22cb..85070012 100644
+--- a/frameworks/base/core/java/android/view/HardwareRenderer.java
++++ b/frameworks/base/core/java/android/view/HardwareRenderer.java
+@@ -112,17 +112,17 @@ public abstract class HardwareRenderer {
+      * 
+      * @hide
+      */
+-    public static boolean sRendererDisabled = false;
++    public static final boolean sRendererDisabled = true;
+ 
+     /**
+      * Further hardware renderer disabling for the system process.
+      * 
+      * @hide
+      */
+-    public static boolean sSystemRendererDisabled = false;
++    public static final boolean sSystemRendererDisabled = true;
+ 
+-    private boolean mEnabled;
+-    private boolean mRequested = true;
++    private final boolean mEnabled = false;
++    private final boolean mRequested = false;
+ 
+     /**
+      * Invoke this method to disable hardware rendering in the current process.
+@@ -130,10 +130,7 @@ public abstract class HardwareRenderer {
+      * @hide
+      */
+     public static void disable(boolean system) {
+-        sRendererDisabled = true;
+-        if (system) {
+-            sSystemRendererDisabled = true;
+-        }
++
+     }
+ 
+     /**
+@@ -377,7 +374,7 @@ public abstract class HardwareRenderer {
+      * @return True if hardware acceleration is in use, false otherwise.
+      */
+     boolean isEnabled() {
+-        return mEnabled;
++        return false;
+     }
+ 
+     /**
+@@ -386,7 +383,7 @@ public abstract class HardwareRenderer {
+      * @param enabled True if the hardware renderer is in use, false otherwise.
+      */
+     void setEnabled(boolean enabled) {
+-        mEnabled = enabled;
++
+     }
+ 
+     /**
+@@ -396,7 +393,7 @@ public abstract class HardwareRenderer {
+      * @return True if requested, false otherwise.
+      */
+     boolean isRequested() {
+-        return mRequested;
++        return false;
+     }
+ 
+     /**
+@@ -406,7 +403,7 @@ public abstract class HardwareRenderer {
+      * @return True to request hardware acceleration, false otherwise.
+      */
+     void setRequested(boolean requested) {
+-        mRequested = requested;
++
+     }
+ 
+     @SuppressWarnings({"deprecation"})
+diff --git a/frameworks/base/core/jni/AndroidRuntime.cpp b/frameworks/base/core/jni/AndroidRuntime.cpp
+index 5fa31726..6b9ecd3d 100644
+--- a/frameworks/base/core/jni/AndroidRuntime.cpp
++++ b/frameworks/base/core/jni/AndroidRuntime.cpp
+@@ -561,13 +561,17 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
+      * values should be specified in a product property override.
+      */
+     strcpy(heapstartsizeOptsBuf, "-Xms");
+-    property_get("dalvik.vm.heapstartsize", heapstartsizeOptsBuf+4, "4m");
+-    opt.optionString = heapstartsizeOptsBuf;
+-    mOptions.add(opt);
++    property_get("dalvik.vm.heapstartsize", heapstartsizeOptsBuf+4, "");
++    if (heapstartsizeOptsBuf[4] != '\0') {
++        opt.optionString = heapstartsizeOptsBuf;
++        mOptions.add(opt);
++    }
+     strcpy(heapsizeOptsBuf, "-Xmx");
+-    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "16m");
+-    opt.optionString = heapsizeOptsBuf;
+-    mOptions.add(opt);
++    property_get("dalvik.vm.heapsize", heapsizeOptsBuf+4, "18m");
++    if (heapsizeOptsBuf[4] != '\0') {
++        opt.optionString = heapsizeOptsBuf;
++        mOptions.add(opt);
++    }
+ 
+     strcpy(heapgrowthlimitOptsBuf, "-XX:HeapGrowthLimit=");
+     property_get("dalvik.vm.heapgrowthlimit", heapgrowthlimitOptsBuf+20, "");
+diff --git a/frameworks/base/core/res/res/values/config.xml b/frameworks/base/core/res/res/values/config.xml
+index c656bec7..ea4c8e7f 100755
+--- a/frameworks/base/core/res/res/values/config.xml
++++ b/frameworks/base/core/res/res/values/config.xml
+@@ -241,10 +241,10 @@
+     <string translatable="false" name="config_tether_apndata"></string>
+ 
+     <!-- Boolean indicating whether the wifi chipset has dual frequency band support -->
+-    <bool translatable="false" name="config_wifi_dual_band_support">false</bool>
++    <bool translatable="false" name="config_wifi_dual_band_support">true</bool>
+ 
+     <!-- Boolean indicating whether the wifi chipset has p2p support -->
+-    <bool translatable="false" name="config_wifi_p2p_support">false</bool>
++    <bool translatable="false" name="config_wifi_p2p_support">true</bool>
+     <!-- Device type information conforming to Annex B format in WiFi Direct specification.
+          The default represents a dual-mode smartphone -->
+     <string translatable="false" name="config_wifi_p2p_device_type">10-0050F204-5</string>
+@@ -254,7 +254,7 @@
+          scan and wake the host when a configured SSID is detected by the dongle. This chipset
+          capability can provide power savings when wifi needs to be always kept on.
+          The driver commands needed to support the feature are BGSCAN-START and BGSCAN-STOP -->
+-    <bool translatable="false" name="config_wifi_background_scan_support">false</bool>
++    <bool translatable="false" name="config_wifi_background_scan_support">true</bool>
+ 
+     <!-- Integer indicating wpa_supplicant scan interval in milliseconds -->
+     <integer translatable="false" name="config_wifi_supplicant_scan_interval">15000</integer>
+@@ -278,13 +278,13 @@
+ 
+     <!-- Flag indicating whether the we should enable the automatic brightness in Settings.
+          Software implementation will be used if config_hardware_auto_brightness_available is not set -->
+-    <bool name="config_automatic_brightness_available">false</bool>
++    <bool name="config_automatic_brightness_available">true</bool>
+ 
+     <!-- Don't name config resources like this.  It should look like config_annoyDianne -->
+     <bool name="config_annoy_dianne">true</bool>
+ 
+     <!-- If this is true, the screen will come on when you unplug usb/power/whatever. -->
+-    <bool name="config_unplugTurnsOnScreen">false</bool>
++    <bool name="config_unplugTurnsOnScreen">true</bool>
+ 
+     <!-- If this is true, the screen will fade off. -->
+     <bool name="config_animateScreenLights">true</bool>
+@@ -293,7 +293,7 @@
+ 
+     <!-- If true, the screen can be rotated via the accelerometer in all 4
+          rotations as the default behavior. -->
+-    <bool name="config_allowAllRotations">false</bool>
++    <bool name="config_allowAllRotations">true</bool>
+ 
+     <!-- If true, the direction rotation is applied to get to an application's requested
+          orientation is reversed.  Normally, the model is that landscape is
+@@ -329,7 +329,7 @@
+     <!-- Control whether being in the desk dock should enable accelerometer
+          based screen orientation.  Note this should probably default to true
+          like car dock, but we haven't had a chance to test it. -->
+-    <bool name="config_deskDockEnablesAccelerometer">false</bool>
++    <bool name="config_deskDockEnablesAccelerometer">true</bool>
+ 
+     <!-- Control whether being in the car dock should enable accelerometer based
+          screen orientation.  This defaults to true because putting a device in
+@@ -356,7 +356,7 @@
+     <integer name="config_longPressOnPowerBehavior">1</integer>
+ 
+     <!-- Indicate whether the SD card is accessible without removing the battery. -->
+-    <bool name="config_batterySdCardAccessibility">false</bool>
++    <bool name="config_batterySdCardAccessibility">true</bool>
+ 
+     <!-- List of file paths for USB host busses to exclude from USB host support.
+          For example, if the first USB bus on the device is used to communicate
+@@ -448,13 +448,13 @@
+     <integer name="config_notificationsBatteryLedOn">125</integer>
+ 
+     <!-- Is the notification LED intrusive? Used to decide if there should be a disable option -->
+-    <bool name="config_intrusiveNotificationLed">false</bool>
++    <bool name="config_intrusiveNotificationLed">true</bool>
+ 
+     <!-- Is the battery LED intrusive? Used to decide if there should be a disable option -->
+-    <bool name="config_intrusiveBatteryLed">false</bool>
++    <bool name="config_intrusiveBatteryLed">true</bool>
+ 
+     <!-- Does the battery LED support multiple colors? Used to decide if the user can change the colors -->
+-    <bool name="config_multiColorBatteryLed">false</bool>
++    <bool name="config_multiColorBatteryLed">true</bool>
+ 
+     <!-- Default value for LED off time when the battery is low on charge in miliseconds -->
+     <integer name="config_notificationsBatteryLedOff">2875</integer>
+@@ -463,10 +463,10 @@
+     <bool name="config_disableMenuKeyInLockScreen">false</bool>
+ 
+     <!-- Don't show lock screen before unlock screen (PIN/pattern/password) -->
+-    <bool name="config_enableLockBeforeUnlockScreen">false</bool>
++    <bool name="config_enableLockBeforeUnlockScreen">true</bool>
+ 
+     <!-- Diable lockscreen rotation by default -->
+-    <bool name="config_enableLockScreenRotation">false</bool>
++    <bool name="config_enableLockScreenRotation">true</bool>
+ 
+     <!-- Enable puk unlockscreen by default.
+          If unlock screen is disabled, the puk should be unlocked through Emergency Dialer -->
+@@ -652,7 +652,7 @@
+ 
+     <!-- Sets whether menu shortcuts should be displayed on panel menus when
+          a keyboard is present. -->
+-    <bool name="config_showMenuShortcutsWhenKeyboardPresent">false</bool>
++    <bool name="config_showMenuShortcutsWhenKeyboardPresent">true</bool>
+ 
+     <!-- Do not translate. Defines the slots is Two Digit Number for dialing normally not USSD -->
+     <string-array name="config_twoDigitNumberPattern" translatable="false">
+@@ -669,7 +669,7 @@
+ 
+     <!-- If this value is true, Sms encoded as octet is decoded by utf8 decoder.
+          If false, decoded by Latin decoder. -->
+-    <bool name="config_sms_utf8_support">false</bool>
++    <bool name="config_sms_utf8_support">true</bool>
+ 
+     <!-- If this value is true, The mms content-disposition field is supported correctly.
+          If false, Content-disposition fragments are ignored -->
+@@ -720,7 +720,7 @@
+     <integer-array name="config_sms_enabled_locking_shift_tables"></integer-array>
+ 
+     <!-- Set to true if the RSSI should always display CDMA signal strength even on EVDO -->
+-    <bool name="config_alwaysUseCdmaRssi">false</bool>
++    <bool name="config_alwaysUseCdmaRssi">true</bool>
+ 
+ 
+     <!-- If this value is true, duplicate Source/Destination port fields
+@@ -742,7 +742,7 @@
+ 
+     <!-- Whether a software navigation bar should be shown. NOTE: in the future this may be
+          autodetected from the Configuration. -->
+-    <bool name="config_showNavigationBar">false</bool>
++    <bool name="config_showNavigationBar">true</bool>
+ 
+     <!-- Whether action menu items should be displayed in ALLCAPS or not.
+          Defaults to true. If this is not appropriate for specific locales
+@@ -752,7 +752,7 @@
+     <!-- Whether action menu items should obey the "withText" showAsAction
+          flag. This may be set to false for situations where space is
+          extremely limited. -->
+-    <bool name="config_allowActionMenuItemTextWithIcon">false</bool>
++    <bool name="config_allowActionMenuItemTextWithIcon">true</bool>
+ 
+     <!-- Remote server that can provide NTP responses. -->
+     <string translatable="false" name="config_ntpServer">pool.ntp.org</string>
+@@ -763,7 +763,7 @@
+     <integer name="config_networkPolicyDefaultWarning">2048</integer>
+ 
+     <!-- Set and Unsets WiMAX -->
+-    <bool name="config_wimaxEnabled">false</bool>
++    <bool name="config_wimaxEnabled">true</bool>
+     <!-- Location of the wimax framwork jar location -->
+     <string name="config_wimaxServiceJarLocation" translatable="false"></string>
+     <!-- Location of the wimax native library locaiton -->
+@@ -810,11 +810,11 @@
+ 
+     <!-- Whether to set a system prop (sys.orientation.landscape)
+          when rotating for devices that have rotating buttons -->
+-    <bool name="config_setLandscapeProp">false</bool>
++    <bool name="config_setLandscapeProp">true</bool>
+ 
+     <!-- Values greater or equal to 0 will enable electronbeam screen-on
+          animation with the specified delay (in milliseconds), -1 will disable the animation -->
+-    <integer name="config_screenOnAnimation">-1</integer>
++    <integer name="config_screenOnAnimation">0</integer>
+ 
+     <!-- True will enable the electron beam screen-off animation. -->
+     <bool name="config_screenOffAnimation">true</bool>
+diff --git a/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java b/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java
+index 724679f3..a5043e48 100644
+--- a/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java
++++ b/frameworks/base/packages/SystemUI/src/com/android/systemui/ImageWallpaper.java
+@@ -64,22 +64,12 @@ public class ImageWallpaper extends WallpaperService {
+ 
+     WallpaperManager mWallpaperManager;
+ 
+-    boolean mIsHwAccelerated;
++    final boolean mIsHwAccelerated = false;
+ 
+     @Override
+     public void onCreate() {
+         super.onCreate();
+         mWallpaperManager = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);
+-
+-        //noinspection PointlessBooleanExpression,ConstantConditions
+-        if (FIXED_SIZED_SURFACE && USE_OPENGL) {
+-            if (!isEmulator()) {
+-                WindowManager windowManager =
+-                        (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+-                Display display = windowManager.getDefaultDisplay();
+-                mIsHwAccelerated = ActivityManager.isHighEndGfx(display);
+-            }
+-        }
+     }
+ 
+     private static boolean isEmulator() {
+diff --git a/frameworks/base/services/input/EventHub.cpp b/frameworks/base/services/input/EventHub.cpp
+index c527bfc2..4bce7048 100644
+--- a/frameworks/base/services/input/EventHub.cpp
++++ b/frameworks/base/services/input/EventHub.cpp
+@@ -684,6 +684,13 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
+                         event->when = nsecs_t(iev.time.tv_sec) * 1000000000LL
+                                 + nsecs_t(iev.time.tv_usec) * 1000LL;
+                         LOGV("event time %lld, now %lld", event->when, now);
++
++                        if (event->when >= now + 10 * 1000000000LL) {
++                            nsecs_t time = systemTime(SYSTEM_TIME_MONOTONIC);
++                            if (event->when > time) {
++                                event->when = time;
++                            }
++                        }
+ #else
+                         event->when = now;
+ #endif
+diff --git a/frameworks/base/services/input/InputReader.cpp b/frameworks/base/services/input/InputReader.cpp
+index d9290f4c..cca9f814 100644
+--- a/frameworks/base/services/input/InputReader.cpp
++++ b/frameworks/base/services/input/InputReader.cpp
+@@ -2574,7 +2574,7 @@ void TouchInputMapper::configureParameters() {
+         mParameters.deviceType = Parameters::DEVICE_TYPE_TOUCH_PAD;
+     } else {
+         // The device is a touch pad of unknown purpose.
+-        mParameters.deviceType = Parameters::DEVICE_TYPE_POINTER;
++        mParameters.deviceType = Parameters::DEVICE_TYPE_TOUCH_SCREEN;
+     }
+ 
+     String8 deviceTypeString;
+diff --git a/frameworks/base/services/java/com/android/server/PowerManagerService.java b/frameworks/base/services/java/com/android/server/PowerManagerService.java
+index 0878136d..f6023029 100644
+--- a/frameworks/base/services/java/com/android/server/PowerManagerService.java
++++ b/frameworks/base/services/java/com/android/server/PowerManagerService.java
+@@ -172,7 +172,7 @@ public class PowerManagerService extends IPowerManager.Stub
+ 
+     private boolean mDoneBooting = false;
+     private boolean mBootCompleted = false;
+-    private int mStayOnConditions = 0;
++    private int mStayOnConditions = -1;
+     private final int[] mBroadcastQueue = new int[] { -1, -1, -1 };
+     private final int[] mBroadcastWhy = new int[3];
+     private boolean mPreparingForScreenOn = false;
+@@ -499,8 +499,6 @@ public class PowerManagerService extends IPowerManager.Stub
+ 
+             synchronized (mLocks) {
+                 // STAY_ON_WHILE_PLUGGED_IN, default to when plugged into AC
+-                mStayOnConditions = getInt(STAY_ON_WHILE_PLUGGED_IN,
+-                        BatteryManager.BATTERY_PLUGGED_AC);
+                 updateWakeLockLocked();
+ 
+                 // SCREEN_OFF_TIMEOUT, default to 15 seconds
+diff --git a/frameworks/base/services/java/com/android/server/pm/PackageManagerService.java b/frameworks/base/services/java/com/android/server/pm/PackageManagerService.java
+index 978eb691..e959a429 100644
+--- a/frameworks/base/services/java/com/android/server/pm/PackageManagerService.java
++++ b/frameworks/base/services/java/com/android/server/pm/PackageManagerService.java
+@@ -3489,65 +3489,6 @@ public class PackageManagerService extends IPackageManager.Stub {
+             if (dataPath.exists()) {
+                 mOutPermissions[1] = 0;
+                 FileUtils.getPermissions(dataPath.getPath(), mOutPermissions);
+-
+-                // If we have mismatched owners for the data path, we have a problem.
+-                if (mOutPermissions[1] != pkg.applicationInfo.uid) {
+-                    boolean recovered = false;
+-                    if ((parseFlags&PackageParser.PARSE_IS_SYSTEM) != 0) {
+-                        // If this is a system app, we can at least delete its
+-                        // current data so the application will still work.
+-                        int ret = mInstaller.remove(pkgName, 0);
+-                        if (ret >= 0) {
+-                            // TODO: Kill the processes first
+-                            // Remove the data directories for all users
+-                            mUserManager.removePackageForAllUsers(pkgName);
+-                            // Old data gone!
+-                            String msg = "System package " + pkg.packageName
+-                                    + " has changed from uid: "
+-                                    + mOutPermissions[1] + " to "
+-                                    + pkg.applicationInfo.uid + "; old data erased";
+-                            reportSettingsProblem(Log.WARN, msg);
+-                            recovered = true;
+-
+-                            // And now re-install the app.
+-                            ret = mInstaller.install(pkgName, pkg.applicationInfo.uid,
+-                                    pkg.applicationInfo.uid);
+-                            if (ret == -1) {
+-                                // Ack should not happen!
+-                                msg = "System package " + pkg.packageName
+-                                        + " could not have data directory re-created after delete.";
+-                                reportSettingsProblem(Log.WARN, msg);
+-                                mLastScanError = PackageManager.INSTALL_FAILED_INSUFFICIENT_STORAGE;
+-                                return null;
+-                            }
+-                            // Create data directories for all users
+-                            mUserManager.installPackageForAllUsers(pkgName,
+-                                    pkg.applicationInfo.uid);
+-                        }
+-                        if (!recovered) {
+-                            mHasSystemUidErrors = true;
+-                        }
+-                    }
+-                    if (!recovered) {
+-                        pkg.applicationInfo.dataDir = "/mismatched_uid/settings_"
+-                            + pkg.applicationInfo.uid + "/fs_"
+-                            + mOutPermissions[1];
+-                        pkg.applicationInfo.nativeLibraryDir = pkg.applicationInfo.dataDir;
+-                        String msg = "Package " + pkg.packageName
+-                                + " has mismatched uid: "
+-                                + mOutPermissions[1] + " on disk, "
+-                                + pkg.applicationInfo.uid + " in settings";
+-                        // writer
+-                        synchronized (mPackages) {
+-                            mSettings.mReadMessages.append(msg);
+-                            mSettings.mReadMessages.append('\n');
+-                            uidError = true;
+-                            if (!pkgSetting.uidError) {
+-                                reportSettingsProblem(Log.ERROR, msg);
+-                            }
+-                        }
+-                    }
+-                }
+                 pkg.applicationInfo.dataDir = dataPath.getPath();
+             } else {
+                 if (DEBUG_PACKAGE_SCANNING) {
+diff --git a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
+index 539f8626..1a9a3759 100644
+--- a/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
++++ b/frameworks/base/services/surfaceflinger/DisplayHardware/DisplayHardwareBase.cpp
+@@ -78,7 +78,6 @@ bool DisplayHardwareBase::DisplayEventThread::threadLoop()
+       err = read(fd, &buf, 1);
+     } while (err < 0 && errno == EINTR);
+     close(fd);
+-    LOGW_IF(err<0, "ANDROID_WAIT_FOR_FB_SLEEP failed (%s)", strerror(errno));
+     if (err >= 0) {
+         sp<SurfaceFlinger> flinger = mFlinger.promote();
+         LOGD("About to give-up screen, flinger = %p", flinger.get());
+@@ -93,7 +92,6 @@ bool DisplayHardwareBase::DisplayEventThread::threadLoop()
+       err = read(fd, &buf, 1);
+     } while (err < 0 && errno == EINTR);
+     close(fd);
+-    LOGW_IF(err<0, "ANDROID_WAIT_FOR_FB_WAKE failed (%s)", strerror(errno));
+     if (err >= 0) {
+         sp<SurfaceFlinger> flinger = mFlinger.promote();
+         LOGD("Screen about to return, flinger = %p", flinger.get());
+
+project hardware/libhardware/
+diff --git a/hardware/libhardware/modules/audio/Android.mk b/hardware/libhardware/modules/audio/Android.mk
+index f773079..8a73756 100644
+--- a/hardware/libhardware/modules/audio/Android.mk
++++ b/hardware/libhardware/modules/audio/Android.mk
+@@ -22,7 +22,7 @@ LOCAL_PATH := $(call my-dir)
+ # required type is 'primary'. Other possibilites are 'a2dp', 'usb', etc.
+ include $(CLEAR_VARS)
+ 
+-LOCAL_MODULE := audio.primary.default
++LOCAL_MODULE := audio.primary.stub
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_SRC_FILES := audio_hw.c
+ LOCAL_SHARED_LIBRARIES := liblog libcutils
+diff --git a/hardware/libhardware/modules/gralloc/framebuffer.cpp b/hardware/libhardware/modules/gralloc/framebuffer.cpp
+index f908976..e52944d 100644
+--- a/hardware/libhardware/modules/gralloc/framebuffer.cpp
++++ b/hardware/libhardware/modules/gralloc/framebuffer.cpp
+@@ -42,10 +42,6 @@
+ 
+ /*****************************************************************************/
+ 
+-// numbers of buffers for page flipping
+-#define NUM_BUFFERS 2
+-
+-
+ enum {
+     PAGE_FLIP = 0x00000001,
+     LOCKED = 0x00000002
+@@ -170,28 +166,7 @@ int mapFrameBufferLocked(struct private_module_t* module)
+     info.xoffset = 0;
+     info.yoffset = 0;
+     info.activate = FB_ACTIVATE_NOW;
+-
+-    /*
+-     * Request NUM_BUFFERS screens (at lest 2 for page flipping)
+-     */
+-    info.yres_virtual = info.yres * NUM_BUFFERS;
+-
+-
+-    uint32_t flags = PAGE_FLIP;
+-    if (ioctl(fd, FBIOPUT_VSCREENINFO, &info) == -1) {
+-        info.yres_virtual = info.yres;
+-        flags &= ~PAGE_FLIP;
+-        LOGW("FBIOPUT_VSCREENINFO failed, page flipping not supported");
+-    }
+-
+-    if (info.yres_virtual < info.yres * 2) {
+-        // we need at least 2 for page-flipping
+-        info.yres_virtual = info.yres;
+-        flags &= ~PAGE_FLIP;
+-        LOGW("page flipping not supported (yres_virtual=%d, requested=%d)",
+-                info.yres_virtual, info.yres*2);
+-    }
+-
++    uint32_t flags = 0;
+     if (ioctl(fd, FBIOGET_VSCREENINFO, &info) == -1)
+         return -errno;
+ 
+@@ -335,7 +310,7 @@ int fb_device_open(hw_module_t const* module, const char* name,
+         if (status >= 0) {
+             int stride = m->finfo.line_length / (m->info.bits_per_pixel >> 3);
+             int format = (m->info.bits_per_pixel == 32)
+-                         ? HAL_PIXEL_FORMAT_RGBX_8888
++                         ? HAL_PIXEL_FORMAT_BGRA_8888
+                          : HAL_PIXEL_FORMAT_RGB_565;
+             const_cast<uint32_t&>(dev->device.flags) = 0;
+             const_cast<uint32_t&>(dev->device.width) = m->info.xres;
+
+project hardware/libhardware_legacy/
+diff --git a/hardware/libhardware_legacy/audio/Android.mk b/hardware/libhardware_legacy/audio/Android.mk
+index 85ccd60..eb793ae 100644
+--- a/hardware/libhardware_legacy/audio/Android.mk
++++ b/hardware/libhardware_legacy/audio/Android.mk
+@@ -63,7 +63,7 @@ LOCAL_STATIC_LIBRARIES := \
+ LOCAL_WHOLE_STATIC_LIBRARIES := \
+     libaudiopolicy_legacy
+ 
+-LOCAL_MODULE := audio_policy.default
++LOCAL_MODULE := audio_policy.stub_legacy
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ LOCAL_MODULE_TAGS := optional
+ 
+diff --git a/hardware/libhardware_legacy/wifi/wifi.c b/hardware/libhardware_legacy/wifi/wifi.c
+index 119252b..111451b 100644
+--- a/hardware/libhardware_legacy/wifi/wifi.c
++++ b/hardware/libhardware_legacy/wifi/wifi.c
+@@ -53,11 +53,14 @@ static char iface[PROPERTY_VALUE_MAX];
+ // TODO: use new ANDROID_SOCKET mechanism, once support for multiple
+ // sockets is in
+ 
+-#ifndef WIFI_DRIVER_MODULE_ARG
+-#define WIFI_DRIVER_MODULE_ARG          ""
++#ifndef WIFI_DRIVER_MODULE_PATH
++#define WIFI_DRIVER_MODULE_PATH         "/system/lib/modules/3.4.39/kernel/drivers/net/wireless/arcadyan/dhd.ko"
++#endif
++#ifndef WIFI_DRIVER_MODULE_NAME
++#define WIFI_DRIVER_MODULE_NAME         "dhd"
+ #endif
+-#ifndef WIFI_AP_DRIVER_MODULE_ARG
+-#define WIFI_AP_DRIVER_MODULE_ARG       ""
++#ifndef WIFI_DRIVER_MODULE_ARG
++#define WIFI_DRIVER_MODULE_ARG          "firmware_path=/system/lib/firmware/arcadyan/bcm4319.bin nvram_path=/system/lib/firmware/arcadyan/nvram.fw iface_name=wlan0 dhd_watchdog_ms=100"
+ #endif
+ #ifndef WIFI_FIRMWARE_LOADER
+ #define WIFI_FIRMWARE_LOADER		""
+@@ -65,7 +68,7 @@ static char iface[PROPERTY_VALUE_MAX];
+ #ifndef WIFI_AP_FIRMWARE_LOADER
+ #define WIFI_AP_FIRMWARE_LOADER         ""
+ #endif
+-#define WIFI_TEST_INTERFACE		"sta"
++#define WIFI_TEST_INTERFACE		"wlan0"
+ 
+ #ifndef WIFI_DRIVER_FW_PATH_STA
+ #define WIFI_DRIVER_FW_PATH_STA		NULL
+@@ -90,7 +93,7 @@ static const char EXT_MODULE_PATH[] = WIFI_EXT_MODULE_PATH;
+ #endif
+ 
+ #ifndef WIFI_DRIVER_FW_PATH_PARAM
+-#define WIFI_DRIVER_FW_PATH_PARAM	"/sys/module/wlan/parameters/fwpath"
++#define WIFI_DRIVER_FW_PATH_PARAM	"/sys/module/dhd/parameters/fwpath"
+ #endif
+ 
+ static const char IFACE_DIR[]           = "/data/system/wpa_supplicant";
+
+project packages/apps/Launcher2/
+diff --git a/packages/apps/Launcher2/res/values-sw600dp/config.xml b/packages/apps/Launcher2/res/values-sw600dp/config.xml
+index 7a07898..7627691 100644
+--- a/packages/apps/Launcher2/res/values-sw600dp/config.xml
++++ b/packages/apps/Launcher2/res/values-sw600dp/config.xml
+@@ -1,5 +1,5 @@
+ <resources>
+-    <bool name="config_largeHeap">true</bool>
++    <bool name="config_largeHeap">false</bool>
+ 
+ <!-- AllApps/Customize/AppsCustomize -->
+     <!-- Out of 100, the percent to shrink the workspace during spring loaded mode. -->
+
+project packages/apps/Trebuchet/
+diff --git a/packages/apps/Trebuchet/res/values-sw600dp/config.xml b/packages/apps/Trebuchet/res/values-sw600dp/config.xml
+index 84c0b89..2f219bb 100644
+--- a/packages/apps/Trebuchet/res/values-sw600dp/config.xml
++++ b/packages/apps/Trebuchet/res/values-sw600dp/config.xml
+@@ -1,5 +1,5 @@
+ <resources>
+-    <bool name="config_largeHeap">true</bool>
++    <bool name="config_largeHeap">false</bool>
+     <bool name="config_defaultAutoRotate">true</bool>
+ 
+ <!-- AllApps/Customize/AppsCustomize -->
+diff --git a/packages/apps/Trebuchet/res/values/config.xml b/packages/apps/Trebuchet/res/values/config.xml
+index 650f2f1..67a1766 100644
+--- a/packages/apps/Trebuchet/res/values/config.xml
++++ b/packages/apps/Trebuchet/res/values/config.xml
+@@ -1,5 +1,5 @@
+ <resources>
+-    <bool name="config_hardwareAccelerated">true</bool>
++    <bool name="config_hardwareAccelerated">false</bool>
+     <bool name="config_largeHeap">false</bool>
+     <bool name="config_defaultAutoRotate">false</bool>
+ 
+
+project system/core/
+diff --git a/system/core/rootdir/init.rc b/system/core/rootdir/init.rc
+index 042143b..7fd5806 100644
+--- a/system/core/rootdir/init.rc
++++ b/system/core/rootdir/init.rc
+@@ -6,12 +6,16 @@ on early-init
+ 
+ # create mountpoints
+     mkdir /mnt 0775 root system
++    export EXTERNAL_STORAGE /mnt/sdcard
++    mkdir /mnt/sdcard 0000 system system
++    # for backwards compatibility
++    symlink /mnt/sdcard /sdcard
+ 
+ on init
+ 
+ sysclktz 0
+ 
+-loglevel 3
++loglevel 0
+ 
+ # setup the global environment
+     export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
+@@ -60,7 +64,7 @@ loglevel 3
+     mkdir /mnt/obb 0700 root system
+     mount tmpfs tmpfs /mnt/obb mode=0755,gid=1000
+ 
+-    write /proc/sys/kernel/panic_on_oops 1
++    write /proc/sys/kernel/panic_on_oops 0
+     write /proc/sys/kernel/hung_task_timeout_secs 0
+     write /proc/cpu/alignment 4
+     write /proc/sys/kernel/sched_latency_ns 10000000
+@@ -92,17 +96,9 @@ loglevel 3
+ # This is needed by any process that uses socket tagging.
+     chmod 0644 /dev/xt_qtaguid
+ 
+-on fs
+-# mount mtd partitions
+-    # Mount /system rw first to give the filesystem a chance to save a checkpoint
+-    mount yaffs2 mtd@system /system
+-    mount yaffs2 mtd@system /system ro remount
+-    mount yaffs2 mtd@userdata /data nosuid nodev
+-    mount yaffs2 mtd@cache /cache nosuid nodev
+-
+ on post-fs
+     # once everything is setup, no need to modify /
+-    mount rootfs rootfs / ro remount
++    mount rootfs rootfs / rw remount
+ 
+     # We chown/chmod /cache again so because mount is run as root + defaults
+     chown system cache /cache
+@@ -156,10 +152,13 @@ on post-fs-data
+     mkdir /data/misc/systemkeys 0700 system system
+     # give system access to wpa_supplicant.conf for backup and restore
+     mkdir /data/misc/wifi 0770 wifi wifi
++    mkdir /data/misc/wifi/sockets 0770 wifi wifi
++    mkdir /data/misc/dhcp 0770 dhcp dhcp
+     chmod 0660 /data/misc/wifi/wpa_supplicant.conf
+     mkdir /data/local 0751 root root
+     mkdir /data/local/tmp 0771 shell shell
+     mkdir /data/data 0771 system system
++    mkdir /data/system 0771 system system
+     mkdir /data/app-private 0771 system system
+     mkdir /data/app 0771 system system
+     mkdir /data/property 0700 root root
+@@ -367,8 +366,18 @@ service console /system/bin/sh
+     user shell
+     group log
+ 
+-on property:ro.debuggable=1
+-    start console
++service wpa_supplicant /system/bin/wpa_supplicant -Dwext -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf
++    socket wpa_wlan0 dgram 0660 wifi wifi
++    disabled
++    oneshot
++
++service dhcpcd_wlan0 /system/bin/dhcpcd -ABKL
++    disabled
++    oneshot
++
++service iprenew_wlan0 /system/bin/dhcpcd -n
++    disabled
++    oneshot
+ 
+ # adbd is controlled via property triggers in init.<platform>.usb.rc
+ service adbd /sbin/adbd
+
+project vendor/cm/
+diff --git a/vendor/cm/get-prebuilts b/vendor/cm/get-prebuilts
+index 2d88b48..6a0b7bd 100755
+--- a/vendor/cm/get-prebuilts
++++ b/vendor/cm/get-prebuilts
+@@ -4,6 +4,6 @@ BASEDIR=`dirname $0`
+ mkdir -p $BASEDIR/proprietary
+ 
+ # Get Android Terminal Emulator (we use a prebuilt so it can update from the Market)
+-curl -L -o $BASEDIR/proprietary/Term.apk -O -L http://jackpal.github.com/Android-Terminal-Emulator/downloads/Term.apk
++curl -L -o $BASEDIR/proprietary/Term.apk -O -L http://jackpal.github.io/Android-Terminal-Emulator/downloads/Term-1.0.65.apk
+ unzip -o -d $BASEDIR/proprietary $BASEDIR/proprietary/Term.apk lib/armeabi/libjackpal-androidterm4.so
+ 
+diff --git a/vendor/cm/vendorsetup.sh b/vendor/cm/vendorsetup.sh
+index 721e05d..4b61fe8 100644
+--- a/vendor/cm/vendorsetup.sh
++++ b/vendor/cm/vendorsetup.sh
+@@ -1,4 +1,21 @@
+-for combo in $(wget -o /dev/null -O - https://raw.github.com/CyanogenMod/hudson/master/cm-build-targets | grep ics | awk {'print $1'})
+-do
+-    add_lunch_combo $combo
+-done
++# for combo in $(wget -o /dev/null -O - https://raw.github.com/LineageOS/hudson/b9f837c447788d4d8cc1c291ee70e92bf4c4e722/cm-build-targets | grep ics | awk {'print $1'}); do echo add_lunch_combo $combo; done
++# add_lunch_combo cm_aoba-userdebug
++# add_lunch_combo cm_c800-userdebug
++# add_lunch_combo cm_doubleshot-userdebug
++# add_lunch_combo cm_e400-userdebug
++# add_lunch_combo cm_e730-userdebug
++# add_lunch_combo cm_e739-userdebug
++# add_lunch_combo cm_hikari-userdebug
++# add_lunch_combo cm_nozomi-userdebug
++# add_lunch_combo cm_p5-userdebug
++# add_lunch_combo cm_p5wifi-userdebug
++# add_lunch_combo cm_shooteru-userdebug
++# add_lunch_combo cm_tenderloin-userdebug
++# add_lunch_combo cm_zeus-userdebug
++# add_lunch_combo cm_zeusc-userdebug
++
++# ./vendor/cm/get-prebuilts
++mkdir -pv $(pwd)/vendor/cm/proprietary
++curl -L -o $(pwd)/vendor/cm/proprietary/Term.apk -O -L http://jackpal.github.io/Android-Terminal-Emulator/downloads/Term-1.0.65.apk
++unzip -o -d $(pwd)/vendor/cm/proprietary $(pwd)/vendor/cm/proprietary/Term.apk lib/armeabi/libjackpal-androidterm4.so
++# ./vendor/cm/get-prebuilts

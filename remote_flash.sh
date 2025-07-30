@@ -26,9 +26,9 @@ show_machinelist () {
   echo "----------------------------------------------------------------"
   echo "What type of system would you like to flash?"
   echo
-  echo "1. LF1000 (Leapster Explorer, Didj, LeapPad Explorer)"
+  echo "1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)"
   echo "2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)"
-  echo "3. LF3000 (LeapPad 3, LeapPad Platinum)"
+  echo "3. LF3000 (Currently Unsupported)"
 }
 
 boot_surgeon () {
@@ -37,9 +37,9 @@ boot_surgeon () {
   echo "Booting the Surgeon environment..."
   python make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf
   python boot_surgeon.py surgeon_tmp.cbf
-  echo -n "Done! Waiting for Surgeon to come up..."
+  echo "Done! Waiting for Surgeon to come up..."
   rm -rf surgeon_tmp.cbf
-  sleep 15
+  sleep 20
   echo "Done!"
 }
 
@@ -47,30 +47,52 @@ nand_part_detect () {
   KERNEL_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Kernel\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   RFS_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"RFS\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   Bulk_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Bulk\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
-  echo "Detected Kernel partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION Bulk Partition=$Bulk_PARTITION"
+  echo "Detected Kernel Partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION Bulk Partition=$Bulk_PARTITION"
 }
 
 nand_flash_kernel () {
   kernel_path=$1
-  echo -n "Flashing the kernel..."
-  ${SSH} "/usr/sbin/flash_erase $KERNEL_PARTITION 0 0"
-  cat $kernel_path | ${SSH} "/usr/sbin/nandwrite -p $KERNEL_PARTITION -"
+  echo "Flashing the kernel..."
+  ${SSH} "flash_erase $KERNEL_PARTITION 0 0"
+  cat $kernel_path | ${SSH} "nandwrite -p $KERNEL_PARTITION -"
   echo "Done flashing the kernel!"
 }
 
 nand_flash_bulk () {
   bulk_path=$1
-  echo -n "Flashing the root filesystem..."
-  ${SSH} "/usr/sbin/ubiformat -y $Bulk_PARTITION"
-  ${SSH} "/usr/sbin/ubiattach -p $Bulk_PARTITION"
-  sleep 1
-  ${SSH} "/usr/sbin/ubimkvol /dev/ubi0 -N Bulk -m"
-  sleep 1
-  ${SSH} "mount -t ubifs /dev/ubi0_0 /mnt/root"
+  echo "Flashing the root filesystem..."
+  ${SSH} "ubiformat -y $Bulk_PARTITION"
+  ${SSH} "ubiattach -p $Bulk_PARTITION"
+  ${SSH} "ubimkvol /dev/ubi0 -N Bulk -m"
+  ${SSH} "mkdir -p /mnt/bulk"
+  ${SSH} "mount -t ubifs /dev/ubi0_0 /mnt/bulk"
   echo "Writing rootfs image..."  
-  cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
-  ${SSH} "umount /mnt/root"
-  ${SSH} "/usr/sbin/ubidetach -d 0"
+  cat $bulk_path | ${SSH} "tar -zxvf '-' -C /mnt/bulk"
+  if [[ $prefix == lf2000_* ]]; then
+    ${SSH} "mkdir -p /mnt/rfs"
+    ${SSH} "ubiattach -p $RFS_PARTITION"
+    ${SSH} "mount -t ubifs -o ro /dev/ubi1_0 /mnt/rfs"
+    ${SSH} "mount -o rbind /dev /mnt/rfs/dev"
+    ${SSH} "mount -o rbind /sys /mnt/rfs/sys"
+    ${SSH} "mount -o rbind /proc /mnt/rfs/proc"
+    ${SSH} 'chroot /mnt/rfs /usr/bin/mfgdata get tsp > "/mnt/bulk/init.nxp3200.sh"'
+    ${SSH} 'sed -i "s/#!\/bin\/sh/#!\/system\/bin\/sh/g" "/mnt/bulk/init.nxp3200.sh"'
+    ${SSH} 'echo "on init" > "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'echo "    write /sys/devices/platform/lf2000-touchscreen/pointercal \"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\"" >> "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'echo "    exec \"/init.nxp3200.sh\"" >> "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'echo "    write /sys/devices/platform/lf2000-aclmtr/calibration \"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\"" >> "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'echo "    write /sys/devices/platform/lf2000-power/adc_constant \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\"" >> "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'echo "    write /sys/devices/platform/lf2000-power/adc_slope_256 \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\"" >> "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'echo "    write /sys/devices/platform/lf2000-touchscreen/tails \"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep "Version=" | cut -d = -f 2) -lt 4 ]; then echo "1"; else echo "0"; fi)\"" >> "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'chown 0:0 "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'chown 0:0 "/mnt/bulk/init.nxp3200.sh"'
+    ${SSH} 'chmod 0777 "/mnt/bulk/init.nxp3200.rc"'
+    ${SSH} 'chmod 0777 "/mnt/bulk/init.nxp3200.sh"'
+  fi
+  ${SSH} "chown -R 0:0 /mnt/bulk"
+  ${SSH} "chmod -R 7777 /mnt/bulk"
+  ${SSH} "umount /mnt/bulk"
+  ${SSH} "ubidetach -d 0"
   echo "Done flashing the root filesystem!"
 }
 
@@ -92,28 +114,30 @@ flash_nand () {
   nand_flash_kernel $kernel
   nand_flash_bulk $rootfs
   echo "Done! Rebooting your LeapFrog Device."
-  ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  ${SSH} "reboot -f"
 }
 
 mmc_flash_kernel () {
   kernel_path=$1
-  echo -n "Flashing the kernel..."
-  ${SSH} "mkdir /mnt/boot"
-  ${SSH} "mount /dev/mmcblk0p2 /mnt/boot"
-  cat $kernel_path | ${SSH} "cat - > /mnt/boot/uImage"
+  echo "Flashing the kernel..."
+  ${SSH} "mkdir -p /mnt/kernel"
+  ${SSH} "mount /dev/mmcblk0p2 /mnt/kernel"
+  cat $kernel_path | ${SSH} "cat - > /mnt/kernel/uImage"
   ${SSH} "umount /dev/mmcblk0p2"
   echo "Done flashing the kernel!"
 }
 
 mmc_flash_bulk () {
   bulk_path=$1
-  echo -n "Flashing the root filesystem..."
+  echo "Flashing the root filesystem..."
   ${SSH} "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
-  ${SSH} "mkdir /mnt/root"
-  ${SSH} "mount -t ext4 /dev/mmcblk0p4 /mnt/root"
+  ${SSH} "mkdir -p /mnt/bulk"
+  ${SSH} "mount -t ext4 /dev/mmcblk0p4 /mnt/bulk"
   echo "Writing rootfs image..."  
-  cat $bulk_path | ${SSH} "gunzip -c | tar x -f '-' -C /mnt/root"
-  ${SSH} "umount /mnt/root"
+  cat $bulk_path | ${SSH} "tar -zxvf '-' -C /mnt/bulk"
+  ${SSH} "chown -R 0:0 /mnt/bulk"
+  ${SSH} "chmod -R 7777 /mnt/bulk"
+  ${SSH} "umount /mnt/bulk"
   echo "Done flashing the root filesystem!"
 }
 
@@ -124,22 +148,18 @@ flash_mmc () {
   mmc_flash_kernel ${prefix}uImage
   mmc_flash_bulk rootfs.tar.gz
   echo "Done! Rebooting your LeapFrog Device."
-  ${SSH} "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  ${SSH} "reboot -f"
 }
 
 show_warning
-prefix=$1
-if [ -z "$prefix" ]
-then
-  show_machinelist
-  read -p "Enter choice (1 - 3)" choice
-  case $choice in
-    1) prefix="lf1000_" ;;
-    2) prefix="lf2000_" ;;
-    3) prefix="lf3000_" ;;
-    *) echo -e "Unknown choice!" && exit 1
-  esac
-fi
+show_machinelist
+read -p "Enter choice (1 - 3)" choice
+case $choice in
+  1) prefix="lf1000_" ;;
+  2) prefix="lf2000_" ;;
+  3) prefix="lf3000_" ;;
+  *) echo "Unknown choice!" && exit 1
+esac
 
 if [ $prefix == "lf3000_" ]; then
 	flash_mmc $prefix
