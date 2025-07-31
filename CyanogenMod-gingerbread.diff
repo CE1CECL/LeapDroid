@@ -495,7 +495,7 @@ index c0a620f..f00a9e0 100644
          // Really brain dead right now -- just take this from the configured
          // vm heap size, and assume it is in megabytes and thus ends with "m".
 -        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "16m");
-+        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "10m");
++        String vmHeapSize = SystemProperties.get("dalvik.vm.heapsize", "18m");
          return Integer.parseInt(vmHeapSize.substring(0, vmHeapSize.length()-1));
      }
      
@@ -508,7 +508,7 @@ index ac770b5..8556914 100644
      property_get("persist.sys.vm.heapsize", propBuf, "");
      if (strcmp(propBuf, "") == 0) {
 -        property_get("dalvik.vm.heapsize", propBuf, "16m");
-+        property_get("dalvik.vm.heapsize", propBuf, "10m");
++        property_get("dalvik.vm.heapsize", propBuf, "18m");
      }
      strcpy(heapsizeOptsBuf+4, propBuf);
      LOGI("Heap size: %s", heapsizeOptsBuf);
