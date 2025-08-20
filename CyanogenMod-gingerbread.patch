@@ -321,10 +321,10 @@ index d8fa2fe..009392a 100644
  
 -WITH_DEXPREOPT := false
 diff --git a/build/target/board/generic_x86/BoardConfig.mk b/build/target/board/generic_x86/BoardConfig.mk
-index 0206434..b9f7a3e 100644
+index 0206434..a0d6e8f 100644
 --- a/build/target/board/generic_x86/BoardConfig.mk
 +++ b/build/target/board/generic_x86/BoardConfig.mk
-@@ -8,14 +8,13 @@ TARGET_NO_BOOTLOADER := true
+@@ -8,14 +8,12 @@ TARGET_NO_BOOTLOADER := true
  TARGET_NO_KERNEL := true
  TARGET_CPU_ABI := x86
  TARGET_ARCH := x86
@@ -337,7 +337,6 @@ index 0206434..b9f7a3e 100644
 -BOARD_USES_GENERIC_AUDIO := true
 +BOARD_USES_GENERIC_AUDIO := false
 +BOARD_WPA_SUPPLICANT_DRIVER := WEXT
-+PRODUCT_COPY_FILES := external/wpa_supplicant/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
  
 -# no hardware camera
  USE_CAMERA_STUB := true
@@ -2814,7 +2813,7 @@ index 5a88fb3..6b10cc8 100644
 
 project frameworks/base/
 diff --git a/frameworks/base/core/java/android/app/ActivityManager.java b/frameworks/base/core/java/android/app/ActivityManager.java
-index c0a620f..f00a9e0 100644
+index c0a620f..82607fd 100644
 --- a/frameworks/base/core/java/android/app/ActivityManager.java
 +++ b/frameworks/base/core/java/android/app/ActivityManager.java
 @@ -66,7 +66,7 @@ public class ActivityManager {
@@ -2827,7 +2826,7 @@ index c0a620f..f00a9e0 100644
      }
      
 diff --git a/frameworks/base/core/jni/AndroidRuntime.cpp b/frameworks/base/core/jni/AndroidRuntime.cpp
-index ac770b5..8556914 100644
+index ac770b5..9cfdc93 100644
 --- a/frameworks/base/core/jni/AndroidRuntime.cpp
 +++ b/frameworks/base/core/jni/AndroidRuntime.cpp
 @@ -661,7 +661,7 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)

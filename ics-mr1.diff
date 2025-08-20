@@ -203,10 +203,10 @@ index d8fa2fe..626bc30 100644
  
 -WITH_DEXPREOPT := false
 diff --git a/build/target/board/generic_x86/BoardConfig.mk b/build/target/board/generic_x86/BoardConfig.mk
-index c62b0a4..5fbe4df 100644
+index c62b0a4..cd1561c 100644
 --- a/build/target/board/generic_x86/BoardConfig.mk
 +++ b/build/target/board/generic_x86/BoardConfig.mk
-@@ -8,15 +8,15 @@ TARGET_NO_BOOTLOADER := true
+@@ -8,15 +8,14 @@ TARGET_NO_BOOTLOADER := true
  TARGET_NO_KERNEL := true
  TARGET_CPU_ABI := x86
  TARGET_ARCH := x86
@@ -219,7 +219,6 @@ index c62b0a4..5fbe4df 100644
 -BOARD_USES_GENERIC_AUDIO := true
 +BOARD_USES_GENERIC_AUDIO := false
 +BOARD_WPA_SUPPLICANT_DRIVER := WEXT
-+PRODUCT_COPY_FILES := external/wpa_supplicant/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
  
  # no hardware camera
 -USE_CAMERA_STUB := true
@@ -227,7 +226,7 @@ index c62b0a4..5fbe4df 100644
  
  # Set /system/bin/sh to ash, not mksh, to make sure we can switch back.
  TARGET_SHELL := ash
-@@ -28,8 +28,8 @@ WITH_DEXPREOPT := true
+@@ -28,8 +27,8 @@ WITH_DEXPREOPT := true
  endif
  
  # Build OpenGLES emulation host and guest libraries
@@ -432,6 +431,24 @@ index 8716ca9..8d32dc5 100644
  }
  
  WEBRTC_INLINE WebRtc_Word32 WEBRTC_SPL_MUL_16_32_RSFT16(WebRtc_Word16 a,
+diff --git a/external/webrtc/src/modules/audio_processing/aec/main/source/aec_rdft_sse2.c b/external/webrtc/src/modules/audio_processing/aec/main/source/aec_rdft_sse2.c
+index 901a1b1..5bf1188 100644
+--- a/external/webrtc/src/modules/audio_processing/aec/main/source/aec_rdft_sse2.c
++++ b/external/webrtc/src/modules/audio_processing/aec/main/source/aec_rdft_sse2.c
+@@ -8,6 +8,7 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
+ 
++#if defined(__SSE2__)
+ #include <emmintrin.h>
+ 
+ #include "aec_rdft.h"
+@@ -207,3 +208,5 @@ void aec_rdft_init_sse2(void) {
+   rftfsub_128 = rftfsub_128_SSE2;
+   rftbsub_128 = rftbsub_128_SSE2;
+ }
++
++#endif   //__SSE2__
 
 project frameworks/base/
 diff --git a/frameworks/base/core/java/android/app/ActivityManager.java b/frameworks/base/core/java/android/app/ActivityManager.java
