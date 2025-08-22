@@ -1,7 +1,7 @@
 
 project bionic/
 diff --git a/bionic/libc/Android.mk b/bionic/libc/Android.mk
-index 49c8731..bdc4f07 100644
+index 49c8731..16aafee 100644
 --- a/bionic/libc/Android.mk
 +++ b/bionic/libc/Android.mk
 @@ -514,7 +514,7 @@ else # !arm
@@ -9,7 +9,7 @@ index 49c8731..bdc4f07 100644
      # Enable recent IA friendly memory routines (such as for Atom)
      # These will not work on the earlier x86 machines
 -    libc_common_cflags += -mtune=i686 -DUSE_SSSE3 -DUSE_SSE2
-+    libc_common_cflags += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse3
++    libc_common_cflags += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse
    endif # x86
  endif # !arm
  
@@ -28,7 +28,7 @@ index c7d65b3..2428617 100644
  
  HOST_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 diff --git a/build/core/combo/TARGET_linux-x86.mk b/build/core/combo/TARGET_linux-x86.mk
-index 0fb6edc..ec26c37 100644
+index 0fb6edc..77e6fb2 100644
 --- a/build/core/combo/TARGET_linux-x86.mk
 +++ b/build/core/combo/TARGET_linux-x86.mk
 @@ -95,11 +95,7 @@ TARGET_GLOBAL_CFLAGS += \
@@ -40,7 +40,7 @@ index 0fb6edc..ec26c37 100644
 -else
 -    TARGET_GLOBAL_CFLAGS += -march=i686
 -endif
-+TARGET_GLOBAL_CFLAGS += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse3
++TARGET_GLOBAL_CFLAGS += -march=i486 -mtune=i386 -mfpmath=387 -mno-sse
  
  TARGET_GLOBAL_CFLAGS += -mbionic
  TARGET_GLOBAL_CFLAGS += -D__ANDROID__
