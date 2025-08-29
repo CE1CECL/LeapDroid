@@ -67,27 +67,28 @@ nand_flash_bulk () {
   ${SSH} "mkdir -p /mnt/bulk"
   ${SSH} "mount -t ubifs /dev/ubi0_0 /mnt/bulk"
   echo "Writing rootfs image..."  
-  cat $bulk_path | ${SSH} "tar -zxvf '-' -C /mnt/bulk"
+  cat $bulk_path | ${SSH} "tar -zxvf - -C /mnt/bulk"
   if [[ $prefix == lf2000_* ]]; then
+    cat lf2000_modules.tar.gz | ${SSH} "tar -zxvf - -C /mnt/bulk"
     ${SSH} "mkdir -p /mnt/rfs"
     ${SSH} "ubiattach -p $RFS_PARTITION"
     ${SSH} "mount -t ubifs -o ro /dev/ubi1_0 /mnt/rfs"
     ${SSH} "mount -o rbind /dev /mnt/rfs/dev"
     ${SSH} "mount -o rbind /sys /mnt/rfs/sys"
     ${SSH} "mount -o rbind /proc /mnt/rfs/proc"
-    ${SSH} 'chroot /mnt/rfs /usr/bin/mfgdata get tsp > "/mnt/bulk/init.nxp3200.sh"'
-    ${SSH} 'sed -i "s/#!\/bin\/sh/#!\/system\/bin\/sh/g" "/mnt/bulk/init.nxp3200.sh"'
-    ${SSH} 'echo "on init" > "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'echo "    write /sys/devices/platform/lf2000-touchscreen/pointercal \"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\"" >> "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'echo "    exec \"/init.nxp3200.sh\"" >> "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'echo "    write /sys/devices/platform/lf2000-aclmtr/calibration \"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\"" >> "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'echo "    write /sys/devices/platform/lf2000-power/adc_constant \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\"" >> "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'echo "    write /sys/devices/platform/lf2000-power/adc_slope_256 \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\"" >> "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'echo "    write /sys/devices/platform/lf2000-touchscreen/tails \"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep "Version=" | cut -d = -f 2) -lt 4 ]; then echo "1"; else echo "0"; fi)\"" >> "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'chown 0:0 "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'chown 0:0 "/mnt/bulk/init.nxp3200.sh"'
-    ${SSH} 'chmod 0777 "/mnt/bulk/init.nxp3200.rc"'
-    ${SSH} 'chmod 0777 "/mnt/bulk/init.nxp3200.sh"'
+    ${SSH} "chroot /mnt/rfs /usr/bin/mfgdata get tsp > \"/mnt/bulk/init.nxp3200.sh\""
+    ${SSH} "sed -i \"s/#!\/bin\/sh/#!\/system\/bin\/sh/g\" \"/mnt/bulk/init.nxp3200.sh\""
+    ${SSH} "echo \"on init\" > \"/mnt/bulk/init.nxp3200.rc\""
+    ${SSH} "echo \"    write /sys/devices/platform/lf2000-touchscreen/pointercal \"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    ${SSH} "echo \"    exec \"/init.nxp3200.sh\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    ${SSH} "echo \"    write /sys/devices/platform/lf2000-aclmtr/calibration \"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    ${SSH} "echo \"    write /sys/devices/platform/lf2000-power/adc_constant \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    ${SSH} "echo \"    write /sys/devices/platform/lf2000-power/adc_slope_256 \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    ${SSH} "echo \"    write /sys/devices/platform/lf2000-touchscreen/tails \"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep \"Version=\" | cut -d = -f 2) -lt 4 ]; then echo \"1\"; else echo \"0\"; fi)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    ${SSH} "chown 0:0 /mnt/bulk/init.nxp3200.rc"
+    ${SSH} "chown 0:0 /mnt/bulk/init.nxp3200.sh"
+    ${SSH} "chmod 0777 /mnt/bulk/init.nxp3200.rc"
+    ${SSH} "chmod 0777 /mnt/bulk/init.nxp3200.sh"
   fi
   ${SSH} "chown -R 0:0 /mnt/bulk"
   ${SSH} "chmod -R 7777 /mnt/bulk"
@@ -109,7 +110,7 @@ flash_nand () {
 	  kernel=${prefix}uImage
   fi
   boot_surgeon ${prefix}surgeon_zImage $memloc
-  ${SSH} -o "StrictHostKeyChecking no" 'test'
+  ${SSH} -o "StrictHostKeyChecking no" "test"
   nand_part_detect
   nand_flash_kernel $kernel
   nand_flash_bulk $rootfs
@@ -134,7 +135,7 @@ mmc_flash_bulk () {
   ${SSH} "mkdir -p /mnt/bulk"
   ${SSH} "mount -t ext4 /dev/mmcblk0p4 /mnt/bulk"
   echo "Writing rootfs image..."  
-  cat $bulk_path | ${SSH} "tar -zxvf '-' -C /mnt/bulk"
+  cat $bulk_path | ${SSH} "tar -zxvf - -C /mnt/bulk"
   ${SSH} "chown -R 0:0 /mnt/bulk"
   ${SSH} "chmod -R 7777 /mnt/bulk"
   ${SSH} "umount /mnt/bulk"
@@ -144,7 +145,7 @@ mmc_flash_bulk () {
 flash_mmc () {
   prefix=$1
   boot_surgeon ${prefix}surgeon_zImage superhigh
-  ${SSH} -o "StrictHostKeyChecking no" 'test'
+  ${SSH} -o "StrictHostKeyChecking no" "test"
   mmc_flash_kernel ${prefix}uImage
   mmc_flash_bulk rootfs.tar.gz
   echo "Done! Rebooting your LeapFrog Device."

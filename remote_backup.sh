@@ -63,7 +63,7 @@ backup_nand () {
 	  kernel=${prefix}uImage
   fi
   boot_surgeon ${prefix}surgeon_zImage $memloc
-  ${SSH} -o "StrictHostKeyChecking no" 'test'
+  ${SSH} -o "StrictHostKeyChecking no" "test"
   nand_part_detect
   for mtd in $(${SSH} "ls /dev/mtd*"); do echo $mtd; ubi=$(basename $mtd); echo "/dev/$ubi -> $prefix$ubi"; ${SSH} "dd if=$mtd" | dd of=$prefix$ubi status=progress; done
   echo "Done! Rebooting your LeapFrog Device."
@@ -74,7 +74,7 @@ backup_nand () {
 backup_mmc () {
   prefix=$1
   boot_surgeon ${prefix}surgeon_zImage superhigh
-  ${SSH} -o "StrictHostKeyChecking no" 'test'
+  ${SSH} -o "StrictHostKeyChecking no" "test"
   for mtd in $(${SSH} "ls /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo "/dev/$ubi -> $prefix$ubi"; ${SSH} "dd if=$mtd" | dd of=$prefix$ubi status=progress; done
   echo "Done! Rebooting your LeapFrog Device."
   ${SSH} "reboot -f"

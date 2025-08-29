@@ -61,7 +61,7 @@ EXIT /B 0
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
   TIMEOUT /NOBREAK /T 20
-  echo Done! Make Sure You Configure Your Device's IP Address to "169.254.8.10"!
+  echo Done! Make Sure You Configure Your Device's IPv4 Address to "169.254.8.10", IPv4 Subnet Mask to "255.255.0.0", and disable IPv6!
   control ncpa.cpl
   pause
 EXIT /B 0
@@ -100,27 +100,28 @@ EXIT /B 0
   %SSH% "mkdir -p /mnt/bulk"
   %SSH% "mount -t ubifs /dev/ubi0_0 /mnt/bulk"
   echo Writing rootfs image...
-  type %bulk_path% | %SSH% "tar -zxvf '-' -C /mnt/bulk"
+  type %bulk_path% | %SSH% "tar -zxvf - -C /mnt/bulk"
   if /I %prefix:"=% == lf2000_ (
-    %SSH% mkdir -p /mnt/rfs
-    %SSH% ubiattach -p $RFS_PARTITION
-    %SSH% mount -t ubifs -o ro /dev/ubi1_0 /mnt/rfs
-    %SSH% mount -o rbind /dev /mnt/rfs/dev
-    %SSH% mount -o rbind /sys /mnt/rfs/sys
-    %SSH% mount -o rbind /proc /mnt/rfs/proc
-    %SSH% chroot /mnt/rfs /usr/bin/mfgdata get tsp > "/mnt/bulk/init.nxp3200.sh"
-    %SSH% sed -i "s/#!\/bin\/sh/#!\/system\/bin\/sh/g" "/mnt/bulk/init.nxp3200.sh"
-    %SSH% echo "on init" > "/mnt/bulk/init.nxp3200.rc"
-    %SSH% echo "    write /sys/devices/platform/lf2000-touchscreen/pointercal \"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\"" >> "/mnt/bulk/init.nxp3200.rc"
-    %SSH% echo "    exec \"/init.nxp3200.sh\"" >> "/mnt/bulk/init.nxp3200.rc"
-    %SSH% echo "    write /sys/devices/platform/lf2000-aclmtr/calibration \"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\"" >> "/mnt/bulk/init.nxp3200.rc"
-    %SSH% echo "    write /sys/devices/platform/lf2000-power/adc_constant \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\"" >> "/mnt/bulk/init.nxp3200.rc"
-    %SSH% echo "    write /sys/devices/platform/lf2000-power/adc_slope_256 \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\"" >> "/mnt/bulk/init.nxp3200.rc"
-    %SSH% echo "    write /sys/devices/platform/lf2000-touchscreen/tails \"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep "Version=" | cut -d = -f 2) -lt 4 ]; then echo "1"; else echo "0"; fi)\"" >> "/mnt/bulk/init.nxp3200.rc"
-    %SSH% chown 0:0 "/mnt/bulk/init.nxp3200.rc"
-    %SSH% chown 0:0 "/mnt/bulk/init.nxp3200.sh"
-    %SSH% chmod 0777 "/mnt/bulk/init.nxp3200.rc"
-    %SSH% chmod 0777 "/mnt/bulk/init.nxp3200.sh"
+    type lf2000_modules.tar.gz | %SSH% "tar -zxvf - -C /mnt/bulk"
+    %SSH% "mkdir -p /mnt/rfs"
+    %SSH% "ubiattach -p %RFS_PARTITION%"
+    %SSH% "mount -t ubifs -o ro /dev/ubi1_0 /mnt/rfs"
+    %SSH% "mount -o rbind /dev /mnt/rfs/dev"
+    %SSH% "mount -o rbind /sys /mnt/rfs/sys"
+    %SSH% "mount -o rbind /proc /mnt/rfs/proc"
+    %SSH% "chroot /mnt/rfs /usr/bin/mfgdata get tsp > \"/mnt/bulk/init.nxp3200.sh\""
+    %SSH% "sed -i \"s/#!\/bin\/sh/#!\/system\/bin\/sh/g\" \"/mnt/bulk/init.nxp3200.sh\""
+    %SSH% "echo \"on init\" > \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/pointercal \"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    exec \"/init.nxp3200.sh\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-aclmtr/calibration \"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_constant \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_slope_256 \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/tails \"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep \"Version=\" | cut -d = -f 2) -lt 4 ]; then echo \"1\"; else echo \"0\"; fi)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "chown 0:0 /mnt/bulk/init.nxp3200.rc"
+    %SSH% "chown 0:0 /mnt/bulk/init.nxp3200.sh"
+    %SSH% "chmod 0777 /mnt/bulk/init.nxp3200.rc"
+    %SSH% "chmod 0777 /mnt/bulk/init.nxp3200.sh"
   )
   %SSH% "chown -R 0:0 /mnt/bulk"
   %SSH% "chmod -R 7777 /mnt/bulk"
@@ -152,7 +153,7 @@ EXIT /B 0
     set rootfs="rootfs.tar.gz"
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   call :nand_part_detect
   call :nand_flash_kernel %kernel:"=%
   call :nand_flash_bulk %rootfs:"=%
@@ -163,7 +164,7 @@ EXIT /B 0
 :mmc_flash_kernel
   SET kernel_path=%~1
   echo Flashing the kernel...
-  %SSH% "mkdir /mnt/kernel"
+  %SSH% "mkdir -p /mnt/kernel"
   %SSH% "mount /dev/mmcblk0p2 /mnt/kernel"
   type %kernel_path% | %SSH% "cat - > /mnt/kernel/uImage"
   %SSH% "umount /dev/mmcblk0p2"
@@ -174,10 +175,10 @@ EXIT /B 0
   SET bulk_path=%~1
   echo Flashing the root filesystem...
   %SSH% "mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
-  %SSH% "mkdir /mnt/bulk"
+  %SSH% "mkdir -p /mnt/bulk"
   %SSH% "mount -t ext4 /dev/mmcblk0p4 /mnt/bulk"
   echo Writing rootfs image... 
-  type %bulk_path% | %SSH% "tar -zxvf '-' -C /mnt/bulk"
+  type %bulk_path% | %SSH% "tar -zxvf - -C /mnt/bulk"
   %SSH% "chown -R 0:0 /mnt/bulk"
   %SSH% "chmod -R 7777 /mnt/bulk"
   %SSH% "umount /mnt/bulk"
@@ -187,7 +188,7 @@ EXIT /B 0
 :flash_mmc
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   call :mmc_flash_kernel %prefix%uImage
   call :mmc_flash_bulk rootfs.tar.gz
   echo Done! Rebooting your LeapFrog Device.

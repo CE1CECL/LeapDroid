@@ -61,7 +61,7 @@ EXIT /B 0
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
   TIMEOUT /NOBREAK /T 20
-  echo Done! Make Sure You Configure Your Device's IP Address to "169.254.8.10"!
+  echo Done! Make Sure You Configure Your Device's IPv4 Address to "169.254.8.10", IPv4 Subnet Mask to "255.255.0.0", and disable IPv6!
   control ncpa.cpl
   pause
 EXIT /B 0
@@ -104,7 +104,7 @@ EXIT /B 0
     set rootfs="rootfs.tar.gz"
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   call :nand_part_detect
   for /f %%m in ('%SSH% "ls /dev/mtd*"') do (
     echo %%m
@@ -120,7 +120,7 @@ EXIT /B 0
 :backup_mmc
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   for /f %%m in ('%SSH% "ls /dev/mmc*"') do (
     echo %%m
     for %%u in (%%~nxm) do (
