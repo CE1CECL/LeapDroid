@@ -79,7 +79,7 @@ EXIT /B 0
   SET "var=%SSH%%SPACE:"=%%BP%"
   FOR /f %%i in ('%SSH:"=% "%BP%"') do set "BULK_PARTITION=%%i"
 
-  echo "Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%"
+  echo Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%
 EXIT /B 0
 
 :restore_nand

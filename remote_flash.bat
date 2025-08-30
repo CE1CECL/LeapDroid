@@ -79,13 +79,13 @@ EXIT /B 0
   SET "var=%SSH%%SPACE:"=%%BP%"
   FOR /f %%i in ('%SSH:"=% "%BP%"') do set "BULK_PARTITION=%%i"
 
-  echo "Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%"
+  echo Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%
 EXIT /B 0
 
 :nand_flash_kernel
   SET kernel_path=%~1
   echo(
-  echo "Flashing the kernel...(%kernel_path%)
+  echo Flashing the kernel...(%kernel_path%)
   %SSH% "flash_erase %KERNEL_PARTITION% 0 0"
   type %kernel_path% | %SSH% "nandwrite -p" %KERNEL_PARTITION% "-"
   echo Done flashing the kernel!
@@ -112,16 +112,16 @@ EXIT /B 0
     %SSH% "chroot /mnt/rfs /usr/bin/mfgdata get tsp > \"/mnt/bulk/init.nxp3200.sh\""
     %SSH% "sed -i \"s/#!\/bin\/sh/#!\/system\/bin\/sh/g\" \"/mnt/bulk/init.nxp3200.sh\""
     %SSH% "echo \"on init\" > \"/mnt/bulk/init.nxp3200.rc\""
-    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/pointercal \"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
-    %SSH% "echo \"    exec \"/init.nxp3200.sh\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
-    %SSH% "echo \"    write /sys/devices/platform/lf2000-aclmtr/calibration \"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
-    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_constant \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
-    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_slope_256 \"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
-    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/tails \"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep \"Version=\" | cut -d = -f 2) -lt 4 ]; then echo \"1\"; else echo \"0\"; fi)\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/pointercal \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    exec \\\"/init.nxp3200.sh\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-aclmtr/calibration \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_constant \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_slope_256 \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/tails \\\"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep \"Version=\" | cut -d = -f 2) -lt 4 ]; then echo \"1\"; else echo \"0\"; fi)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
     %SSH% "chown 0:0 /mnt/bulk/init.nxp3200.rc"
     %SSH% "chown 0:0 /mnt/bulk/init.nxp3200.sh"
-    %SSH% "chmod 0777 /mnt/bulk/init.nxp3200.rc"
-    %SSH% "chmod 0777 /mnt/bulk/init.nxp3200.sh"
+    %SSH% "chmod 7777 /mnt/bulk/init.nxp3200.rc"
+    %SSH% "chmod 7777 /mnt/bulk/init.nxp3200.sh"
   )
   %SSH% "chown -R 0:0 /mnt/bulk"
   %SSH% "chmod -R 7777 /mnt/bulk"
