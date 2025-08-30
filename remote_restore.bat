@@ -61,7 +61,7 @@ EXIT /B 0
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
   TIMEOUT /NOBREAK /T 20
-  echo Done! Make Sure You Configure Your Device's IPv4 Address to "169.254.8.10", IPv4 Subnet Mask to "255.255.0.0", and disable IPv6!
+  echo Done! Make Sure You Configure Your Device's IPv4 Address to "169.254.8.2", IPv4 Subnet Mask to "255.255.0.0", and disable IPv6!
   control ncpa.cpl
   pause
 EXIT /B 0
