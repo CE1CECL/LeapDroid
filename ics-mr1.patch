@@ -355,10 +355,10 @@ index 0f1956b..a328133 100644
  PRODUCT_BRAND := Android
  PRODUCT_MODEL := Full Android on Emulator
 diff --git a/build/target/product/full_base.mk b/build/target/product/full_base.mk
-index d89af51..9c436bb 100644
+index d89af51..bcd4ea8 100644
 --- a/build/target/product/full_base.mk
 +++ b/build/target/product/full_base.mk
-@@ -24,11 +24,7 @@ PRODUCT_PACKAGES := \
+@@ -24,11 +24,8 @@ PRODUCT_PACKAGES := \
      libdrmframework \
      libdrmframework_jni \
      libfwdlockengine \
@@ -368,6 +368,7 @@ index d89af51..9c436bb 100644
 -    libWnnJpnDic \
 -    libwnndict \
 +    lights.default \
++    sensors.default \
      VideoEditor \
      WAPPushManager
  
@@ -666,18 +667,62 @@ index b799a63..2185d92 100755
 -
 -endif
 diff --git a/device/samsung/crespo/liblight/lights.c b/device/samsung/crespo/liblight/lights.c
-index ee6416a..231b668 100755
+index ee6416a..ca202f9 100755
 --- a/device/samsung/crespo/liblight/lights.c
 +++ b/device/samsung/crespo/liblight/lights.c
-@@ -28,7 +28,7 @@
+@@ -19,6 +19,7 @@
+ #include <stdint.h>
+ #include <string.h>
+ #include <errno.h>
++#include <dirent.h>
+ #include <fcntl.h>
+ #include <pthread.h>
+ #include <sys/ioctl.h>
+@@ -28,8 +29,6 @@
  static pthread_once_t g_init = PTHREAD_ONCE_INIT;
  static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
  
 -char const *const LCD_FILE = "/sys/class/backlight/s5p_bl/brightness";
-+char const *const LCD_FILE = "/sys/class/backlight/*/brightness";
- 
+-
  static int write_int(char const *path, int value)
  {
+ 	int fd;
+@@ -70,7 +69,21 @@ static int set_light_backlight(struct light_device_t *dev,
+ 	int brightness = rgb_to_brightness(state);
+ 
+ 	pthread_mutex_lock(&g_lock);
+-	err = write_int(LCD_FILE, brightness);
++
++	char *dirname = "/sys/class/backlight";
++	char devname[PATH_MAX];
++	DIR *dir;
++	struct dirent *de;
++	dir = opendir(dirname);
++	if(dir == NULL)
++		return -1;
++	while((de = readdir(dir))) {
++		if(de->d_name[0] == '.')
++			continue;
++		snprintf(devname, sizeof(devname), "%s/%s/brightness", dirname, de->d_name);
++		err = write_int(devname, brightness);
++	}
++	closedir(dir);
+ 
+ 	pthread_mutex_unlock(&g_lock);
+ 	return err;
+diff --git a/device/samsung/crespo/libsensors/Android.mk b/device/samsung/crespo/libsensors/Android.mk
+index b451d4a..d9ade9a 100644
+--- a/device/samsung/crespo/libsensors/Android.mk
++++ b/device/samsung/crespo/libsensors/Android.mk
+@@ -19,7 +19,7 @@ LOCAL_PATH := $(call my-dir)
+ # hw/<SENSORS_HARDWARE_MODULE_ID>.<ro.product.board>.so
+ include $(CLEAR_VARS)
+ 
+-LOCAL_MODULE := sensors.herring
++LOCAL_MODULE := sensors.default
+ 
+ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+ 
 
 project external/bison/
 diff --git a/external/bison/ChangeLog b/external/bison/ChangeLog
@@ -4380,7 +4425,7 @@ index f773079..5f57b7b 100644
  LOCAL_SRC_FILES := audio_hw.c
  LOCAL_SHARED_LIBRARIES := liblog libcutils
 diff --git a/hardware/libhardware/modules/gralloc/framebuffer.cpp b/hardware/libhardware/modules/gralloc/framebuffer.cpp
-index f908976..e52944d 100644
+index f908976..3d92376 100644
 --- a/hardware/libhardware/modules/gralloc/framebuffer.cpp
 +++ b/hardware/libhardware/modules/gralloc/framebuffer.cpp
 @@ -42,10 +42,6 @@
@@ -4429,7 +4474,7 @@ index f908976..e52944d 100644
              int stride = m->finfo.line_length / (m->info.bits_per_pixel >> 3);
              int format = (m->info.bits_per_pixel == 32)
 -                         ? HAL_PIXEL_FORMAT_RGBX_8888
-+                         ? HAL_PIXEL_FORMAT_BGRA_8888
++                         ? (m->info.red.offset ? HAL_PIXEL_FORMAT_BGRA_8888 : HAL_PIXEL_FORMAT_RGBX_8888)
                           : HAL_PIXEL_FORMAT_RGB_565;
              const_cast<uint32_t&>(dev->device.flags) = 0;
              const_cast<uint32_t&>(dev->device.width) = m->info.xres;
@@ -4449,7 +4494,7 @@ index ef41374..7533fd9 100644
  LOCAL_MODULE_TAGS := optional
  
 diff --git a/hardware/libhardware_legacy/wifi/wifi.c b/hardware/libhardware_legacy/wifi/wifi.c
-index 37cbb1e..f9a734e 100644
+index 37cbb1e..f29fb1f 100644
 --- a/hardware/libhardware_legacy/wifi/wifi.c
 +++ b/hardware/libhardware_legacy/wifi/wifi.c
 @@ -53,13 +53,19 @@ static char iface[PROPERTY_VALUE_MAX];
@@ -4457,7 +4502,7 @@ index 37cbb1e..f9a734e 100644
  // sockets is in
  
 +#ifndef WIFI_DRIVER_MODULE_PATH
-+#define WIFI_DRIVER_MODULE_PATH         "/system/lib/modules/3.4.39/kernel/drivers/net/wireless/arcadyan/dhd.ko"
++#define WIFI_DRIVER_MODULE_PATH         "/system/lib/modules/3.4.67/kernel/drivers/net/wireless/arcadyan/dhd.ko"
 +#endif
 +#ifndef WIFI_DRIVER_MODULE_NAME
 +#define WIFI_DRIVER_MODULE_NAME         "dhd"
