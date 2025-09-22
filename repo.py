@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
 #
 # Copyright (C) 2008 The Android Open Source Project
@@ -146,10 +146,10 @@ REPO_REV = os.environ.get('REPO_REV')
 if not REPO_REV:
   REPO_REV = 'stable'
 # URL to file bug reports for repo tool issues.
-BUG_URL = 'https://bugs.chromium.org/p/gerrit/issues/entry?template=Repo+tool+issue'
+BUG_URL = 'https://issues.gerritcodereview.com/issues/new?component=1370071'
 
 # increment this whenever we make important changes to this script
-VERSION = (2, 21)
+VERSION = (2, 36)
 
 # increment this if the MAINTAINER_KEYS block is modified
 KEYRING_VERSION = (2, 3)
@@ -254,34 +254,37 @@ import re
 import shutil
 import stat
 
+
 if sys.version_info[0] == 3:
-  import urllib.request
   import urllib.error
+  import urllib.request
 else:
   import imp
+
   import urllib2
   urllib = imp.new_module('urllib')
   urllib.request = urllib2
   urllib.error = urllib2
 
 
-home_dot_repo = os.path.expanduser('~/.repoconfig')
+repo_config_dir = os.getenv('REPO_CONFIG_DIR', os.path.expanduser('~'))
+home_dot_repo = os.path.join(repo_config_dir, '.repoconfig')
 gpg_dir = os.path.join(home_dot_repo, 'gnupg')
 
 
 def GetParser(gitc_init=False):
   """Setup the CLI parser."""
   if gitc_init:
-    usage = 'repo gitc-init -c client [options] [-u] url'
+    sys.exit('repo: fatal: GITC not supported.')
   else:
     usage = 'repo init [options] [-u] url'
 
   parser = optparse.OptionParser(usage=usage)
-  InitParser(parser, gitc_init=gitc_init)
+  InitParser(parser)
   return parser
 
 
-def InitParser(parser, gitc_init=False):
+def InitParser(parser):
   """Setup the CLI parser."""
   # NB: Keep in sync with command.py:_CommonOptions().
 
@@ -316,18 +319,18 @@ def InitParser(parser, gitc_init=False):
                    help='download the manifest as a static file '
                         'rather then create a git checkout of '
                         'the manifest repo')
+  group.add_option('--manifest-depth', type='int', default=0, metavar='DEPTH',
+                   help='create a shallow clone of the manifest repo with '
+                        'given depth (0 for full clone); see git clone '
+                        '(default: %default)')
 
   # Options that only affect manifest project, and not any of the projects
   # specified in the manifest itself.
   group = parser.add_option_group('Manifest (only) checkout options')
-  cbr_opts = ['--current-branch']
-  # The gitc-init subcommand allocates -c itself, but a lot of init users
-  # want -c, so try to satisfy both as best we can.
-  if not gitc_init:
-    cbr_opts += ['-c']
-  group.add_option(*cbr_opts,
+
+  group.add_option('--current-branch', '-c', default=True,
                    dest='current_branch_only', action='store_true',
-                   help='fetch only current manifest branch from server')
+                   help='fetch only current manifest branch from server (default)')
   group.add_option('--no-current-branch',
                    dest='current_branch_only', action='store_false',
                    help='fetch all manifest branches from server')
@@ -406,14 +409,6 @@ def InitParser(parser, gitc_init=False):
                    action='store_true', default=False,
                    help='Always prompt for name/e-mail')
 
-  # gitc-init specific settings.
-  if gitc_init:
-    group = parser.add_option_group('GITC options')
-    group.add_option('-f', '--manifest-file',
-                     help='Optional manifest file to use for this GITC client.')
-    group.add_option('-c', '--gitc-client',
-                     help='Name of the gitc_client instance to create or modify.')
-
   return parser
 
 
@@ -443,8 +438,7 @@ def run_command(cmd, **kwargs):
     except UnicodeError:
       print('repo: warning: Invalid UTF-8 output:\ncmd: %r\n%r' % (cmd, output),
             file=sys.stderr)
-      # TODO(vapier): Once we require Python 3, use 'backslashreplace'.
-      return output.decode('utf-8', 'replace')
+      return output.decode('utf-8', 'backslashreplace')
 
   # Run & package the results.
   proc = subprocess.Popen(cmd, **kwargs)
@@ -502,10 +496,10 @@ def gitc_parse_clientdir(gitc_fs_path):
   """Parse a path in the GITC FS and return its client name.
 
   Args:
-    gitc_fs_path: A subdirectory path within the GITC_FS_ROOT_DIR.
+      gitc_fs_path: A subdirectory path within the GITC_FS_ROOT_DIR.
 
   Returns:
-    The GITC client name.
+      The GITC client name.
   """
   if gitc_fs_path == GITC_FS_ROOT_DIR:
     return None
@@ -578,26 +572,6 @@ def _Init(args, gitc_init=False):
   rev = opt.repo_rev or REPO_REV
 
   try:
-    if gitc_init:
-      gitc_manifest_dir = get_gitc_manifest_dir()
-      if not gitc_manifest_dir:
-        print('fatal: GITC filesystem is not available. Exiting...',
-              file=sys.stderr)
-        sys.exit(1)
-      gitc_client = opt.gitc_client
-      if not gitc_client:
-        gitc_client = gitc_parse_clientdir(os.getcwd())
-      if not gitc_client:
-        print('fatal: GITC client (-c) is required.', file=sys.stderr)
-        sys.exit(1)
-      client_dir = os.path.join(gitc_manifest_dir, gitc_client)
-      if not os.path.exists(client_dir):
-        os.makedirs(client_dir)
-      os.chdir(client_dir)
-      if os.path.exists(repodir):
-        # This GITC Client has already initialized repo so continue.
-        return
-
     os.mkdir(repodir)
   except OSError as e:
     if e.errno != errno.EEXIST:
@@ -612,15 +586,20 @@ def _Init(args, gitc_init=False):
   try:
     if not opt.quiet:
       print('Downloading Repo source from', url)
-    dst = os.path.abspath(os.path.join(repodir, S_repo))
+    dst_final = os.path.abspath(os.path.join(repodir, S_repo))
+    dst = dst_final + '.tmp'
+    shutil.rmtree(dst, ignore_errors=True)
     _Clone(url, dst, opt.clone_bundle, opt.quiet, opt.verbose)
 
     remote_ref, rev = check_repo_rev(dst, rev, opt.repo_verify, quiet=opt.quiet)
     _Checkout(dst, remote_ref, rev, opt.quiet)
 
     if not os.path.isfile(os.path.join(dst, 'repo')):
-      print("warning: '%s' does not look like a git-repo repository, is "
-            "REPO_URL set correctly?" % url, file=sys.stderr)
+      print("fatal: '%s' does not look like a git-repo repository, is "
+            "--repo-url set correctly?" % url, file=sys.stderr)
+      raise CloneFailure()
+
+    os.rename(dst, dst_final)
 
   except CloneFailure:
     print('fatal: double check your --repo-rev setting.', file=sys.stderr)
@@ -933,14 +912,14 @@ def resolve_repo_rev(cwd, committish):
   * xxx: Branch or tag or commit.
 
   Args:
-    cwd: The git checkout to run in.
-    committish: The REPO_REV argument to resolve.
+      cwd: The git checkout to run in.
+      committish: The REPO_REV argument to resolve.
 
   Returns:
-    A tuple of (remote ref, commit) as makes sense for the committish.
-    For branches, this will look like ('refs/heads/stable', <revision>).
-    For tags, this will look like ('refs/tags/v1.0', <revision>).
-    For commits, this will be (<revision>, <revision>).
+      A tuple of (remote ref, commit) as makes sense for the committish.
+      For branches, this will look like ('refs/heads/stable', <revision>).
+      For tags, this will look like ('refs/tags/v1.0', <revision>).
+      For commits, this will be (<revision>, <revision>).
   """
   def resolve(committish):
     ret = run_git('rev-parse', '--verify', '%s^{commit}' % (committish,),
@@ -1095,7 +1074,7 @@ class Requirements(object):
     """Initialize.
 
     Args:
-      requirements: A dictionary of settings.
+        requirements: A dictionary of settings.
     """
     self.requirements = requirements
 
@@ -1317,6 +1296,7 @@ def main(orig_args):
         print("fatal: cloning the git-repo repository failed, will remove "
               "'%s' " % path, file=sys.stderr)
         shutil.rmtree(path, ignore_errors=True)
+        shutil.rmtree(path + '.tmp', ignore_errors=True)
         sys.exit(1)
       repo_main, rel_repo_dir = _FindRepo()
     else:
