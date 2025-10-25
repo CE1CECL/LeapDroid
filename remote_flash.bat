@@ -1,6 +1,7 @@
 @echo off
 
 SET SSH=ssh root@169.254.8.1
+SET RFSVER=2
 
 call :show_warning
 call :show_machinelist
@@ -151,9 +152,9 @@ EXIT /B 0
     make_cbf.exe %memloc:"=% %prefix:"=%zImage %kernel:"=%
   )
   if /I %prefix:"=% == lf1000_ (
-    set rootfs="lf1000_rootfs.tar.gz"
+    set rootfs="lf1000_rootfs%RFSVER%.tar.gz"
   ) else (
-    set rootfs="rootfs.tar.gz"
+    set rootfs="rootfs%RFSVER%.tar.gz"
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
   %SSH% -o "StrictHostKeyChecking no" "test"

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SSH="ssh root@169.254.8.1"
+RFSVER="2"
 
 show_warning () {
   clear
@@ -103,12 +104,12 @@ nand_flash_bulk () {
 flash_nand () {
   prefix=$1
   if [[ $prefix == lf1000_* ]]; then
-	  rootfs="lf1000_rootfs.tar.gz"
+	  rootfs="lf1000_rootfs${RFSVER}.tar.gz"
 	  memloc="high"
 	  kernel="zImage_tmp.cbf"
 	  python make_cbf.py $memloc ${prefix}zImage $kernel
   else
-	  rootfs="rootfs.tar.gz"
+	  rootfs="rootfs${RFSVER}.tar.gz"
 	  memloc="superhigh"
 	  kernel=${prefix}uImage
   fi
