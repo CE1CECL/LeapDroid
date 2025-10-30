@@ -1,0 +1,184 @@
+; Licensed to Leapfrog
+;
+; Copyright (c) 2005-2009 Belcarra Technologies 2005
+;
+; NOTICE: This software is licensed, not sold, Any modification of
+; this inf file to change the reference to a device or an operating
+; system is not permitted excepted as authorized in writing by
+; Belcarra.
+;
+
+; This package will install the:
+;
+;       Leapfrog USB LAN driver
+;
+; For use with:
+;
+;       Belcarra USBLAN Function Drivers
+;
+; This will enable an Embedded Device to communicate with Windows system
+; using TCP/IP.
+;
+; For more information on the Belcarra USBLAN Function and Leapfrog Host Drivers 
+; go to:
+;
+;       http://www.belcarra.com
+;
+; For licensing information to use the Belcarra USBLAN Function and Host
+; Drivers contact:
+;
+;       sales@belcarra.com
+;
+;
+
+
+[Version]
+Signature       = "$CHICAGO$"
+Class           = Net
+ClassGUID       = {4D36E972-E325-11CE-BFC1-08002BE10318}
+Provider        = %Leapfrog.Name%
+CatalogFile    = LeapFrog-02-03-05-012-1373324.cat
+DriverVer       = 09/10/2009,02.03.05.012
+Compatible      = 1
+
+[Manufacturer]
+%Leapfrog.Manufacturer%  = Leapfrog, NTx86, NTia64, NTamd64
+
+
+;----------------------Windows XP and 2000 Specific----------------------------
+[BTCUsbLan.ndi.NT]
+Characteristics                         = 0x84
+BusType                                 = 15
+AddReg                                  = BTCUsbLan_AddReg_NT, BTCUSBLAN_Add_Reg_Common
+CopyFiles                               = BTCUsbLan_ndi_CopyFiles
+
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+;-----------------------------------------------------------------------------
+[BTCUsbLan_AddReg_NT]
+HKR, Ndi,                       Service,        0,  "Leapfrog USBLAN"
+HKR, Ndi\Interfaces,            UpperRange,     0,  "ndis5"
+HKR, Ndi\Interfaces,            LowerRange,     0,  "ethernet"
+
+
+[BTCUSBLAN_Add_Reg_Common]
+HKR, Ndi\params\HubPortName,    ParamDesc,      0, %HubPortName%
+HKR, Ndi\params\HubPortName,    type,           0, "edit"
+HKR, Ndi\params\HubPortName,    default,        0, ""
+
+
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,NetworkLIP,           0x00010003, 0x0a, 0x0, 0x0, 0x01
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,NetworkMIP,           0x00010003, 0x0a, 0x0, 0x0, 0xf0
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,NetworkSIP,           0x00010003, 0x0a, 0x0, 0x0, 0xfd
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,NetworkMask,          0x00010003, 0xff, 0xff, 0xff, 0x00
+
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,BasicBridgeType,      0x00010003, 0
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,NCMBridgeType,        0x00010003, 0
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,ECMBridgeType,        0x00010003, 0
+HKLM,SYSTEM\CURRENTCONTROLSET\SERVICES\Leapfrog-USBLAN,EEMBridgeType,        0x00010003, 0
+
+
+
+[BTCUsbLan.ndi.NT.Services]
+AddService = %BTCUsbLan.Service.DispName%, 2, BTCUsbLan_AddService
+
+;---------------Common Varieables-----------------------------------------------------------
+
+ 
+
+[SourceDisksNames.x86]
+1=%Leapfrog.DriverDiskName%,,,i386\
+
+[SourceDisksNames.amd64]
+1=%Leapfrog.DriverDiskName%,,,amd64\
+
+[SourceDisksNames.ia64]
+1=%Leapfrog.DriverDiskName%,,,ia64\
+
+[SourceDisksFiles]
+btblan.sys=1
+
+[DestinationDirs]
+BTCUsbLan_ndi_CopyFiles = 12 ; WINDOWS\SYSTEM32\DRIVERS
+
+[BTCUsbLan_ndi_CopyFiles]
+btblan.sys
+
+
+[BTCUsbLan_AddService]
+DisplayName                             = %BTCUsbLan.Service.DispName%
+ServiceType                             = 1    ; SERVICE_KERNEL_DRIVER
+;StartType                               = 1    ; SERVICE_SYSTEM_START
+StartType                               = 3    ; SERVICE_DEMAND_START
+ErrorControl                            = 1    ; NORMAL
+ServiceBinary                           = %12%\btblan.sys
+LoadOrderGroup                          = NDIS
+
+
+
+
+;-----------------------------------------------------------------------------
+
+[strings]
+Leapfrog.Name                           = "Leapfrog"
+Leapfrog.Manufacturer                   = "Leapfrog"
+BTCUsbLan.DeviceDesc                    = "Leapfrog USB LAN Adapter"
+BTCUsbLan.Service.DispName              = "Leapfrog-USBLAN"
+
+HubPortName                             = "USB Hub and Port Name"
+InterfaceCfg                            = "NDIS Interface Configuration"
+Leapfrog.DriverDiskName                 = "Leapfrog Installation Directory"
+
+;-----------------------------------------------------------------------------
+
+
+
+[Leapfrog]
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0014
+
+[Leapfrog.NTx86]
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0014
+
+[Leapfrog.NTia64]
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0014
+
+[Leapfrog.NTamd64]
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0010
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0011
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0012
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0013
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB\VID_0F63&PID_0014
+%BTCUsbLan.DeviceDesc% = BTCUsbLan.ndi, USB2\VID_0F63&PID_0014

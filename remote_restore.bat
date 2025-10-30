@@ -3,7 +3,6 @@
 SET SSH=ssh root@169.254.8.1
 
 call :show_warning
-SET prefix=%~1
 call :show_machinelist
 echo Enter choice (1 - 3)
 SET /P REPLY=
@@ -48,9 +47,9 @@ EXIT /B 0
 echo ----------------------------------------------------------------
 echo What type of system would you like to restore?
 echo(
-echo 1. LF1000 (Leapster Explorer, Didj, LeapPad Explorer)
+echo 1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)
 echo 2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)
-echo 3. LF3000 (LeapPad 3, LeapPad Platinum)
+echo 3. LF3000 (Currently Unsupported)
 EXIT /B 0
 
 :boot_surgeon
@@ -61,8 +60,8 @@ EXIT /B 0
   python boot_surgeon.py surgeon_tmp.cbf || boot_surgeon.exe surgeon_tmp.cbf
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
-  TIMEOUT /NOBREAK /T 15
-  echo Done! Make Sure You Configure Your Device's IP Address to "169.254.8.10"!
+  TIMEOUT /NOBREAK /T 20
+  echo Done! Make Sure You Configure Your Device's IPv4 Address to "169.254.8.2", IPv4 Subnet Mask to "255.255.0.0", and disable IPv6!
   control ncpa.cpl
   pause
 EXIT /B 0
@@ -80,7 +79,7 @@ EXIT /B 0
   SET "var=%SSH%%SPACE:"=%%BP%"
   FOR /f %%i in ('%SSH:"=% "%BP%"') do set "BULK_PARTITION=%%i"
 
-  echo "Detected Kernel partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%"
+  echo Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%
 EXIT /B 0
 
 :restore_nand
@@ -105,7 +104,7 @@ EXIT /B 0
     set rootfs="rootfs.tar.gz"
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   call :nand_part_detect
   for /f %%m in ('%SSH% "ls /dev/mtd*"') do (
     echo %%m
@@ -115,13 +114,13 @@ EXIT /B 0
     )
   )
   echo Done! Rebooting your LeapFrog Device.
-  %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  %SSH% "reboot -f"
 EXIT /B 0
 
 :restore_mmc
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   for /f %%m in ('%SSH% "ls /dev/mmc*"') do (
     echo %%m
     for %%u in (%%~nxm) do (
@@ -130,5 +129,5 @@ EXIT /B 0
     )
   )
   echo Done! Rebooting your LeapFrog Device.
-  %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  %SSH% "reboot -f"
 EXIT /B 0

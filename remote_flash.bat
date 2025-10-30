@@ -1,9 +1,9 @@
 @echo off
 
 SET SSH=ssh root@169.254.8.1
+SET RFSVER=2
 
 call :show_warning
-SET prefix=%~1
 call :show_machinelist
 echo Enter choice (1 - 3)
 SET /P REPLY=
@@ -48,9 +48,9 @@ EXIT /B 0
 echo ----------------------------------------------------------------
 echo What type of system would you like to flash?
 echo(
-echo 1. LF1000 (Leapster Explorer, Didj, LeapPad Explorer)
+echo 1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)
 echo 2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)
-echo 3. LF3000 (LeapPad 3, LeapPad Platinum)
+echo 3. LF3000 (Currently Unsupported)
 EXIT /B 0
 
 :boot_surgeon
@@ -61,8 +61,8 @@ EXIT /B 0
   python boot_surgeon.py surgeon_tmp.cbf || boot_surgeon.exe surgeon_tmp.cbf
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
-  TIMEOUT /NOBREAK /T 15
-  echo Done! Make Sure You Configure Your Device's IP Address to "169.254.8.10"!
+  TIMEOUT /NOBREAK /T 20
+  echo Done! Make Sure You Configure Your Device's IPv4 Address to "169.254.8.2", IPv4 Subnet Mask to "255.255.0.0", and disable IPv6!
   control ncpa.cpl
   pause
 EXIT /B 0
@@ -80,31 +80,57 @@ EXIT /B 0
   SET "var=%SSH%%SPACE:"=%%BP%"
   FOR /f %%i in ('%SSH:"=% "%BP%"') do set "BULK_PARTITION=%%i"
 
-  echo "Detected Kernel partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%"
+  echo Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%
 EXIT /B 0
 
 :nand_flash_kernel
   SET kernel_path=%~1
   echo(
-  echo "Flashing the kernel...(%kernel_path%)
-  %SSH% "/usr/sbin/flash_erase %KERNEL_PARTITION% 0 0"
-  type %kernel_path% | %SSH% "/usr/sbin/nandwrite -p" %KERNEL_PARTITION% "-"
+  echo Flashing the kernel...(%kernel_path%)
+  %SSH% "flash_erase %KERNEL_PARTITION% 0 0"
+  type %kernel_path% | %SSH% "nandwrite -p" %KERNEL_PARTITION% "-"
   echo Done flashing the kernel!
 EXIT /B 0
 
 :nand_flash_bulk
   SET bulk_path=%~1
   echo Flashing the root filesystem...
-  %SSH% "/usr/sbin/ubiformat -y %BULK_PARTITION%"
-  %SSH% "/usr/sbin/ubiattach -p %BULK_PARTITION%"
-  TIMEOUT /NOBREAK /T 1
-  %SSH% "/usr/sbin/ubimkvol /dev/ubi0 -N Bulk -m"
-  TIMEOUT /NOBREAK /T 1
-  %SSH% "mount -t ubifs /dev/ubi0_0 /mnt/root"
+  %SSH% "ubiformat -y %BULK_PARTITION%"
+  %SSH% "ubiattach -p %BULK_PARTITION%"
+  %SSH% "ubimkvol /dev/ubi0 -N Bulk -m"
+  %SSH% "mkdir -p /mnt/bulk"
+  %SSH% "mount -t ubifs /dev/ubi0_0 /mnt/bulk"
   echo Writing rootfs image...
-  type %bulk_path% | %SSH% "gunzip -c | tar x -f '-' -C /mnt/root"
-  %SSH% "umount /mnt/root"
-  %SSH% "/usr/sbin/ubidetach -d 0"
+  type %bulk_path% | %SSH% "tar -zxvf - -C /mnt/bulk"
+  if /I %prefix:"=% == lf2000_ (
+    type lf2000_modules.tar.gz | %SSH% "tar -zxvf - -C /mnt/bulk"
+    %SSH% "mkdir -p /mnt/rfs"
+    %SSH% "ubiattach -p %RFS_PARTITION%"
+    %SSH% "mount -t ubifs -o ro /dev/ubi1_0 /mnt/rfs"
+    %SSH% "mount -o rbind /dev /mnt/rfs/dev"
+    %SSH% "mount -o rbind /sys /mnt/rfs/sys"
+    %SSH% "mount -o rbind /proc /mnt/rfs/proc"
+    %SSH% "chroot /mnt/rfs /usr/bin/mfgdata get tsp > \"/mnt/bulk/init.nxp3200.sh\""
+    %SSH% "sed -i \"s/#!\/bin\/sh/#!\/system\/bin\/sh/g\" \"/mnt/bulk/init.nxp3200.sh\""
+    %SSH% "echo \"on init\" > \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/pointercal \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get ts)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-aclmtr/calibration \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get aclcal)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_constant \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 1)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-power/adc_slope_256 \\\"$(chroot /mnt/rfs /usr/bin/mfgdata get adc | cut -d ' ' -f 2)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    write /sys/devices/platform/lf2000-touchscreen/tails \\\"$(if [ $(chroot /mnt/rfs /usr/bin/mfgdata get tsp | grep \"Version=\" | cut -d = -f 2) -lt 4 ]; then echo \"1\"; else echo \"0\"; fi)\\\"\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    start nxp3200\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"service nxp3200 /init.nxp3200.sh\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    disabled\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "echo \"    oneshot\" >> \"/mnt/bulk/init.nxp3200.rc\""
+    %SSH% "chown 0:0 /mnt/bulk/init.nxp3200.rc"
+    %SSH% "chown 0:0 /mnt/bulk/init.nxp3200.sh"
+    %SSH% "chmod 7777 /mnt/bulk/init.nxp3200.rc"
+    %SSH% "chmod 7777 /mnt/bulk/init.nxp3200.sh"
+  )
+  %SSH% "chown -R 0:0 /mnt/bulk"
+  %SSH% "chmod -R 7777 /mnt/bulk"
+  %SSH% "umount /mnt/bulk"
+  %SSH% "ubidetach -d 0"
   echo(
   echo Done flashing the root filesystem!
 EXIT /B 0
@@ -126,25 +152,25 @@ EXIT /B 0
     make_cbf.exe %memloc:"=% %prefix:"=%zImage %kernel:"=%
   )
   if /I %prefix:"=% == lf1000_ (
-    set rootfs="lf1000_rootfs.tar.gz"
+    set rootfs="lf1000_rootfs%RFSVER%.tar.gz"
   ) else (
-    set rootfs="rootfs.tar.gz"
+    set rootfs="rootfs%RFSVER%.tar.gz"
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   call :nand_part_detect
   call :nand_flash_kernel %kernel:"=%
   call :nand_flash_bulk %rootfs:"=%
   echo Done! Rebooting your LeapFrog Device.
-  %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  %SSH% "reboot -f"
 EXIT /B 0
 
 :mmc_flash_kernel
   SET kernel_path=%~1
   echo Flashing the kernel...
-  %SSH% "mkdir /mnt/boot"
-  %SSH% "mount /dev/mmcblk0p2 /mnt/boot"
-  type %kernel_path% | %SSH% "cat - > /mnt/boot/uImage"
+  %SSH% "mkdir -p /mnt/kernel"
+  %SSH% "mount /dev/mmcblk0p2 /mnt/kernel"
+  type %kernel_path% | %SSH% "cat - > /mnt/kernel/uImage"
   %SSH% "umount /dev/mmcblk0p2"
   echo Done flashing the kernel!
 EXIT /B 0
@@ -152,21 +178,23 @@ EXIT /B 0
 :mmc_flash_bulk
   SET bulk_path=%~1
   echo Flashing the root filesystem...
-  %SSH% "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
-  %SSH% "mkdir /mnt/root"
-  %SSH% "mount -t ext4 /dev/mmcblk0p4 /mnt/root"
+  %SSH% "mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
+  %SSH% "mkdir -p /mnt/bulk"
+  %SSH% "mount -t ext4 /dev/mmcblk0p4 /mnt/bulk"
   echo Writing rootfs image... 
-  type %bulk_path% | %SSH% "gunzip -c | tar x -f '-' -C /mnt/root"
-  %SSH% "umount /mnt/root"
+  type %bulk_path% | %SSH% "tar -zxvf - -C /mnt/bulk"
+  %SSH% "chown -R 0:0 /mnt/bulk"
+  %SSH% "chmod -R 7777 /mnt/bulk"
+  %SSH% "umount /mnt/bulk"
   echo Done flashing the root filesystem!
 EXIT /B 0
 
 :flash_mmc
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
-  %SSH% -o "StrictHostKeyChecking no" 'test'
+  %SSH% -o "StrictHostKeyChecking no" "test"
   call :mmc_flash_kernel %prefix%uImage
   call :mmc_flash_bulk rootfs.tar.gz
   echo Done! Rebooting your LeapFrog Device.
-  %SSH% "(echo 1 >/proc/sys/kernel/sysrq) && (echo b >/proc/sysrq-trigger)"
+  %SSH% "reboot -f"
 EXIT /B 0

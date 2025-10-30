@@ -2,15 +2,15 @@
 
 To Install LeapDroid:
 
-- On Linux:
+- On Linux (Run As `root`, assumed Debian/Ubuntu):
 ```
-./remote_flash.sh
+sudo apt install --no-install-suggests --no-install-recommends sg3-utils --yes
+sudo ./remote_flash.sh
 ```
 
-- On Windows:
+- On Windows (Run As Administrator):
 ```
 .\remote_flash.bat
 ```
 
 And Choose the LF1000/LF2000 Option, depending on your platform! (Only the LF1000 & LF2000 Options are Supported for Now, as only they have been implemented for now!)
-
