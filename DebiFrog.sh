@@ -31,7 +31,7 @@ chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org
 chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20220802T105840Z/ buster/updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
 chroot DebiFrog /bin/rm -rfv /etc/hostname
 chroot DebiFrog /bin/echo "" | chroot DebiFrog /usr/bin/tee /etc/hostname
-chroot DebiFrog /usr/bin/apt-get --yes --force-yes update
+chroot DebiFrog /usr/bin/apt-get --yes --force-yes update --allow-unauthenticated --allow-insecure-repositories
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes dist-upgrade --no-install-suggests --no-install-recommends
 chroot DebiFrog /usr/bin/yes "1" | chroot DebiFrog /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes autoremove

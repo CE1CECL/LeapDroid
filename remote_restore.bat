@@ -26,18 +26,18 @@ EXIT /B %ERRORLEVEL%
 :show_warning
 cls
 echo This Restores your Backups on your Leapster/LeapPad!
-echo(
+echo.
 echo WARNING! This utility will ERASE the stock LeapFrog OS and any other
 echo data on the device. The device can be restored to stock settings using
 echo the LeapFrog Connect app. Note that flashing your device will likely
 echo VOID YOUR WARRANTY! Proceed at your own risk.
-echo(
+echo.
 echo Please power off your device, and do the following -
-echo(
+echo.
 echo Leapster Explorer - Hold the L + R shoulder buttons AND the Hint (?) button whilst powering on
 echo Leapster GS - Hold the L + R shoulder buttons whilst powering on 
 echo LeapPad - Hold the Right arrow + Home buttons AND the Volume Down button whilst powering on.
-echo(
+echo.
 echo You should see a screen with a green or blue background and a picture of the device
 echo connecting to a computer.
 pause
@@ -46,7 +46,7 @@ EXIT /B 0
 :show_machinelist
 echo ----------------------------------------------------------------
 echo What type of system would you like to restore?
-echo(
+echo.
 echo 1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)
 echo 2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)
 echo 3. LF3000 (Currently Unsupported)

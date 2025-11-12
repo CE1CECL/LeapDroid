@@ -27,18 +27,18 @@ EXIT /B %ERRORLEVEL%
 :show_warning
 cls
 echo This Installs LeapDroid on your Leapster/LeapPad!
-echo(
+echo.
 echo WARNING! This utility will ERASE the stock LeapFrog OS and any other
 echo data on the device. The device can be restored to stock settings using
 echo the LeapFrog Connect app. Note that flashing your device will likely
 echo VOID YOUR WARRANTY! Proceed at your own risk.
-echo(
+echo.
 echo Please power off your device, and do the following -
-echo(
+echo.
 echo Leapster Explorer - Hold the L + R shoulder buttons AND the Hint (?) button whilst powering on
 echo Leapster GS - Hold the L + R shoulder buttons whilst powering on 
 echo LeapPad - Hold the Right arrow + Home buttons AND the Volume Down button whilst powering on.
-echo(
+echo.
 echo You should see a screen with a green or blue background and a picture of the device
 echo connecting to a computer.
 pause
@@ -47,7 +47,7 @@ EXIT /B 0
 :show_machinelist
 echo ----------------------------------------------------------------
 echo What type of system would you like to flash?
-echo(
+echo.
 echo 1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)
 echo 2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)
 echo 3. LF3000 (Currently Unsupported)
@@ -85,7 +85,6 @@ EXIT /B 0
 
 :nand_flash_kernel
   SET kernel_path=%~1
-  echo(
   echo Flashing the kernel...(%kernel_path%)
   %SSH% "flash_erase %KERNEL_PARTITION% 0 0"
   type %kernel_path% | %SSH% "nandwrite -p" %KERNEL_PARTITION% "-"
@@ -102,6 +101,7 @@ EXIT /B 0
   %SSH% "mount -t ubifs /dev/ubi0_0 /mnt/bulk"
   echo Writing rootfs image...
   type %bulk_path% | %SSH% "tar -zxvf - -C /mnt/bulk"
+  %SSH% "echo \"ro.stay.on.while.plugged.in=1\" >> \"/mnt/bulk/system/build.prop\""
   if /I %prefix:"=% == lf2000_ (
     type lf2000_modules.tar.gz | %SSH% "tar -zxvf - -C /mnt/bulk"
     %SSH% "mkdir -p /mnt/rfs"
@@ -131,7 +131,6 @@ EXIT /B 0
   %SSH% "chmod -R 7777 /mnt/bulk"
   %SSH% "umount /mnt/bulk"
   %SSH% "ubidetach -d 0"
-  echo(
   echo Done flashing the root filesystem!
 EXIT /B 0
 
