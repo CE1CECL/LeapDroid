@@ -43,14 +43,14 @@ boot_surgeon () {
   echo "Done!"
 }
 
-nand_part_detect () {
+part_detect () {
   KERNEL_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Kernel\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   RFS_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"RFS\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   Bulk_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Bulk\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   echo "Detected Kernel Partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION Bulk Partition=$Bulk_PARTITION"
 }
 
-restore_nand () {
+restore () {
   prefix=$1
   if [[ $prefix == lf1000_* ]]; then
 	  rootfs="lf1000_rootfs.tar.gz"
@@ -64,18 +64,8 @@ restore_nand () {
   fi
   boot_surgeon ${prefix}surgeon_zImage $memloc
   ${SSH} -o "StrictHostKeyChecking no" "test"
-  nand_part_detect
-  for mtd in $(${SSH} "ls /dev/mtd*"); do echo $mtd; ubi=$(basename $mtd); echo "$prefix$ubi -> /dev/$ubi"; dd status=progress if=$prefix$ubi | ${SSH} "dd of=$mtd"; done
-  echo "Done! Rebooting your LeapFrog Device."
-  ${SSH} "reboot -f"
-}
-
-
-restore_mmc () {
-  prefix=$1
-  boot_surgeon ${prefix}surgeon_zImage superhigh
-  ${SSH} -o "StrictHostKeyChecking no" "test"
-  for mtd in $(${SSH} "ls /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo "$prefix$ubi -> /dev/$ubi"; dd status=progress if=$prefix$ubi | ${SSH} "dd of=$mtd"; done
+  part_detect
+  for mtd in $(${SSH} "ls /dev/mtd* /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo "$prefix$ubi -> /dev/$ubi"; dd status=progress if=$prefix$ubi | ${SSH} "dd of=$mtd"; done
   echo "Done! Rebooting your LeapFrog Device."
   ${SSH} "reboot -f"
 }
@@ -90,8 +80,4 @@ case $choice in
   *) echo "Unknown choice!" && exit 1
 esac
 
-if [ $prefix == "lf3000_" ]; then
-	restore_mmc $prefix
-else
-	restore_nand $prefix
-fi
+restore $prefix
