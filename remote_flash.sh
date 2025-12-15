@@ -136,7 +136,7 @@ mmc_flash_kernel () {
 mmc_flash_bulk () {
   bulk_path=$1
   echo "Flashing the root filesystem..."
-  ${SSH} "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
+  ${SSH} "mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
   ${SSH} "mkdir -p /mnt/bulk"
   ${SSH} "mount -t ext4 /dev/mmcblk0p4 /mnt/bulk"
   echo "Writing rootfs image..."  
