@@ -69,6 +69,7 @@ nand_flash_bulk () {
   ${SSH} "mount -t ubifs /dev/ubi0_0 /mnt/bulk"
   echo "Writing rootfs image..."  
   cat $bulk_path | ${SSH} "tar -zxvf - -C /mnt/bulk"
+  ${SSH} "echo \"ro.stay.on.while.plugged.in=1\" >> \"/mnt/bulk/system/build.prop\""
   if [[ $prefix == lf2000_* ]]; then
     cat lf2000_modules.tar.gz | ${SSH} "tar -zxvf - -C /mnt/bulk"
     ${SSH} "mkdir -p /mnt/rfs"
@@ -135,7 +136,7 @@ mmc_flash_kernel () {
 mmc_flash_bulk () {
   bulk_path=$1
   echo "Flashing the root filesystem..."
-  ${SSH} "/sbin/mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
+  ${SSH} "mkfs.ext4 -F -L Bulk -O ^metadata_csum /dev/mmcblk0p4"
   ${SSH} "mkdir -p /mnt/bulk"
   ${SSH} "mount -t ext4 /dev/mmcblk0p4 /mnt/bulk"
   echo "Writing rootfs image..."  

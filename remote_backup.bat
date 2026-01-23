@@ -8,13 +8,13 @@ echo Enter choice (1 - 3)
 SET /P REPLY=
 if /I "%REPLY%" == "1" (
 	set prefix="lf1000_"
-	call :backup_nand "lf1000_"
+	call :backup "lf1000_"
 ) else if /I "%REPLY%" == "2" (
 	set prefix="lf2000_"
-	call :backup_nand "lf2000_"
+	call :backup "lf2000_"
 ) else if /I "%REPLY%" == "3" (
 	set prefix="lf3000_"
-	call :backup_mmc "lf3000_"
+	call :backup "lf3000_"
 ) else (
 	echo Unknown choice!
 	pause
@@ -26,18 +26,18 @@ EXIT /B %ERRORLEVEL%
 :show_warning
 cls
 echo This will Back up your Leapster/LeapPad!
-echo(
+echo.
 echo WARNING! This utility will ERASE the stock LeapFrog OS and any other
 echo data on the device. The device can be restored to stock settings using
 echo the LeapFrog Connect app. Note that flashing your device will likely
 echo VOID YOUR WARRANTY! Proceed at your own risk.
-echo(
+echo.
 echo Please power off your device, and do the following -
-echo(
+echo.
 echo Leapster Explorer - Hold the L + R shoulder buttons AND the Hint (?) button whilst powering on
 echo Leapster GS - Hold the L + R shoulder buttons whilst powering on 
 echo LeapPad - Hold the Right arrow + Home buttons AND the Volume Down button whilst powering on.
-echo(
+echo.
 echo You should see a screen with a green or blue background and a picture of the device
 echo connecting to a computer.
 pause
@@ -46,7 +46,7 @@ EXIT /B 0
 :show_machinelist
 echo ----------------------------------------------------------------
 echo What type of system would you like to backup?
-echo(
+echo.
 echo 1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)
 echo 2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)
 echo 3. LF3000 (Currently Unsupported)
@@ -66,7 +66,7 @@ EXIT /B 0
   pause
 EXIT /B 0
 
-:nand_part_detect
+:part_detect
   SET SPACE=" "
   SET KP=awk -e '$4 ~ \"Kernel\"  {print \"/dev/\" substr($1, 1, length($1)-1)}' /proc/mtd
   FOR /f %%i in ('%SSH:"=% "%KP%"') do set "KERNEL_PARTITION=%%i"
@@ -82,7 +82,7 @@ EXIT /B 0
   echo Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%
 EXIT /B 0
 
-:backup_nand
+:backup
   SET prefix=%~1
   if /I %prefix:"=% == lf1000_ (
     set memloc="high"
@@ -105,23 +105,8 @@ EXIT /B 0
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
   %SSH% -o "StrictHostKeyChecking no" "test"
-  call :nand_part_detect
-  for /f %%m in ('%SSH% "ls /dev/mtd*"') do (
-    echo %%m
-    for %%u in (%%~nxm) do (
-        echo /dev/%%u -> %prefix:"=%%%u%
-        %SSH% "dd if=%%m" > %prefix:"=%%%u%
-    )
-  )
-  echo Done! Rebooting your LeapFrog Device.
-  %SSH% "reboot -f"
-EXIT /B 0
-
-:backup_mmc
-  SET prefix=%~1
-  call :boot_surgeon %prefix%surgeon_zImage superhigh
-  %SSH% -o "StrictHostKeyChecking no" "test"
-  for /f %%m in ('%SSH% "ls /dev/mmc*"') do (
+  call :part_detect
+  for /f %%m in ('%SSH% "ls /dev/mtd* /dev/mmc*"') do (
     echo %%m
     for %%u in (%%~nxm) do (
         echo /dev/%%u -> %prefix:"=%%%u%
