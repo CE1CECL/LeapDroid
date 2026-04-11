@@ -67,7 +67,12 @@ EXIT /B 0
   pause
 EXIT /B 0
 
-:nand_part_detect
+:test_detect
+  %SSH% -o "StrictHostKeyChecking no" "test"
+  if %ERRORLEVEL% neq 1 call :test_detect
+EXIT /B 0
+
+:part_detect
   SET SPACE=" "
   SET KP=awk -e '$4 ~ \"Kernel\"  {print \"/dev/\" substr($1, 1, length($1)-1)}' /proc/mtd
   FOR /f %%i in ('%SSH:"=% "%KP%"') do set "KERNEL_PARTITION=%%i"
@@ -156,8 +161,8 @@ EXIT /B 0
     set rootfs="rootfs%RFSVER%.tar.gz"
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
-  %SSH% -o "StrictHostKeyChecking no" "test"
-  call :nand_part_detect
+  call :test_detect
+  call :part_detect
   call :nand_flash_kernel %kernel:"=%
   call :nand_flash_bulk %rootfs:"=%
   echo Done! Rebooting your LeapFrog Device.
@@ -191,7 +196,7 @@ EXIT /B 0
 :flash_mmc
   SET prefix=%~1
   call :boot_surgeon %prefix%surgeon_zImage superhigh
-  %SSH% -o "StrictHostKeyChecking no" "test"
+  call :test_detect
   call :mmc_flash_kernel %prefix%uImage
   call :mmc_flash_bulk rootfs.tar.gz
   echo Done! Rebooting your LeapFrog Device.

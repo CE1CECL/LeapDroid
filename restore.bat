@@ -8,13 +8,13 @@ echo Enter choice (1 - 3)
 SET /P REPLY=
 if /I "%REPLY%" == "1" (
 	set prefix="lf1000_"
-	call :backup "lf1000_"
+	call :restore "lf1000_"
 ) else if /I "%REPLY%" == "2" (
 	set prefix="lf2000_"
-	call :backup "lf2000_"
+	call :restore "lf2000_"
 ) else if /I "%REPLY%" == "3" (
 	set prefix="lf3000_"
-	call :backup "lf3000_"
+	call :restore "lf3000_"
 ) else (
 	echo Unknown choice!
 	pause
@@ -25,7 +25,7 @@ EXIT /B %ERRORLEVEL%
 
 :show_warning
 cls
-echo This will Back up your Leapster/LeapPad!
+echo This Restores your Backups on your Leapster/LeapPad!
 echo.
 echo WARNING! This utility will ERASE the stock LeapFrog OS and any other
 echo data on the device. The device can be restored to stock settings using
@@ -45,7 +45,7 @@ EXIT /B 0
 
 :show_machinelist
 echo ----------------------------------------------------------------
-echo What type of system would you like to backup?
+echo What type of system would you like to restore?
 echo.
 echo 1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)
 echo 2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)
@@ -66,6 +66,11 @@ EXIT /B 0
   pause
 EXIT /B 0
 
+:test_detect
+  %SSH% -o "StrictHostKeyChecking no" "test"
+  if %ERRORLEVEL% neq 1 call :test_detect
+EXIT /B 0
+
 :part_detect
   SET SPACE=" "
   SET KP=awk -e '$4 ~ \"Kernel\"  {print \"/dev/\" substr($1, 1, length($1)-1)}' /proc/mtd
@@ -82,7 +87,7 @@ EXIT /B 0
   echo Detected Kernel Partition=%KERNEL_PARTITION% RFS Partition=%RFS_PARTITION% Bulk Partition=%BULK_PARTITION%
 EXIT /B 0
 
-:backup
+:restore
   SET prefix=%~1
   if /I %prefix:"=% == lf1000_ (
     set memloc="high"
@@ -104,13 +109,13 @@ EXIT /B 0
     set rootfs="rootfs.tar.gz"
   )
   call :boot_surgeon %prefix:"=%surgeon_zImage %memloc:"=%
-  %SSH% -o "StrictHostKeyChecking no" "test"
+  call :test_detect
   call :part_detect
   for /f %%m in ('%SSH% "ls /dev/mtd* /dev/mmc*"') do (
     echo %%m
     for %%u in (%%~nxm) do (
-        echo /dev/%%u -> %prefix:"=%%%u%
-        %SSH% "dd if=%%m" > %prefix:"=%%%u%
+        echo %prefix:"=%%%u% -> /dev/%%u 
+        type %prefix:"=%%%u% | %SSH% "dd of=%%m"
     )
   )
   echo Done! Rebooting your LeapFrog Device.

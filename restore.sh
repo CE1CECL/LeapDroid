@@ -4,10 +4,10 @@ SSH="ssh root@169.254.8.1"
 
 show_warning () {
   clear
-  echo "This will Back up your Leapster/LeapPad!"
+  echo "This Restores your Backups on your Leapster/LeapPad!"
   echo
   echo "WARNING! This utility will ERASE the stock LeapFrog OS and any other"
-  echo "data on the device. The device can be backupd to stock settings using"
+  echo "data on the device. The device can be restored to stock settings using"
   echo "the LeapFrog Connect app. Note that flashing your device will likely"
   echo "VOID YOUR WARRANTY! Proceed at your own risk."
   echo
@@ -24,7 +24,7 @@ show_warning () {
 
 show_machinelist () {
   echo "----------------------------------------------------------------"
-  echo "What type of system would you like to backup?"
+  echo "What type of system would you like to restore?"
   echo
   echo "1. LF1000 (Didj, Leapster Explorer, LeapPad Explorer)"
   echo "2. LF2000 (Leapster GS, LeapPad 2, LeapPad Ultra, LeapPad Ultra XDI)"
@@ -43,6 +43,13 @@ boot_surgeon () {
   echo "Done!"
 }
 
+test_detect () {
+  ${SSH} -o "StrictHostKeyChecking no" "test"
+  if [[ $? != 1 ]]; then
+    test_detect
+  fi
+}
+
 part_detect () {
   KERNEL_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Kernel\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   RFS_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"RFS\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
@@ -50,7 +57,7 @@ part_detect () {
   echo "Detected Kernel Partition=$KERNEL_PARTITION RFS Partition=$RFS_PARTITION Bulk Partition=$Bulk_PARTITION"
 }
 
-backup () {
+restore () {
   prefix=$1
   if [[ $prefix == lf1000_* ]]; then
 	  rootfs="lf1000_rootfs.tar.gz"
@@ -63,9 +70,9 @@ backup () {
 	  kernel=${prefix}uImage
   fi
   boot_surgeon ${prefix}surgeon_zImage $memloc
-  ${SSH} -o "StrictHostKeyChecking no" "test"
+  test_detect
   part_detect
-  for mtd in $(${SSH} "ls /dev/mtd* /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo "/dev/$ubi -> $prefix$ubi"; ${SSH} "dd if=$mtd" | dd of=$prefix$ubi status=progress; done
+  for mtd in $(${SSH} "ls /dev/mtd* /dev/mmc*"); do echo $mtd; ubi=$(basename $mtd); echo "$prefix$ubi -> /dev/$ubi"; dd status=progress if=$prefix$ubi | ${SSH} "dd of=$mtd"; done
   echo "Done! Rebooting your LeapFrog Device."
   ${SSH} "reboot -f"
 }
@@ -80,4 +87,4 @@ case $choice in
   *) echo "Unknown choice!" && exit 1
 esac
 
-backup $prefix
+restore $prefix

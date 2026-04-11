@@ -44,7 +44,14 @@ boot_surgeon () {
   echo "Done!"
 }
 
-nand_part_detect () {
+test_detect () {
+  ${SSH} -o "StrictHostKeyChecking no" "test"
+  if [[ $? != 1 ]]; then
+    test_detect
+  fi
+}
+
+part_detect () {
   KERNEL_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Kernel\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   RFS_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"RFS\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
   Bulk_PARTITION=`${SSH} "awk -e '\\$4 ~ /\"Bulk\"/ {print \"/dev/\" substr(\\$1, 1, length(\\$1)-1)}' /proc/mtd"`
@@ -115,8 +122,8 @@ flash_nand () {
 	  kernel=${prefix}uImage
   fi
   boot_surgeon ${prefix}surgeon_zImage $memloc
-  ${SSH} -o "StrictHostKeyChecking no" "test"
-  nand_part_detect
+  test_detect
+  part_detect
   nand_flash_kernel $kernel
   nand_flash_bulk $rootfs
   echo "Done! Rebooting your LeapFrog Device."
@@ -150,7 +157,7 @@ mmc_flash_bulk () {
 flash_mmc () {
   prefix=$1
   boot_surgeon ${prefix}surgeon_zImage superhigh
-  ${SSH} -o "StrictHostKeyChecking no" "test"
+  test_detect
   mmc_flash_kernel ${prefix}uImage
   mmc_flash_bulk rootfs.tar.gz
   echo "Done! Rebooting your LeapFrog Device."
