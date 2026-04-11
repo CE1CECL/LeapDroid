@@ -4,7 +4,7 @@ To Install LeapDroid:
 
 - On Linux (Run As `root`, assumed Debian/Ubuntu):
 ```
-sudo apt install --no-install-suggests --no-install-recommends sg3-utils --yes
+sudo apt install --no-install-suggests --no-install-recommends sg3-utils python3 --yes
 sudo ./flash.sh
 ```
 
