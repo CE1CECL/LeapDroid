@@ -35,8 +35,8 @@ boot_surgeon () {
   surgeon_path=$1
   memloc=$2
   echo "Booting the Surgeon environment..."
-  python make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf
-  python boot_surgeon.py surgeon_tmp.cbf
+  python make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf || python3 make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf || python2 make_cbf.py $memloc $surgeon_path surgeon_tmp.cbf
+  python boot_surgeon.py surgeon_tmp.cbf || python3 boot_surgeon.py surgeon_tmp.cbf || python2 boot_surgeon.py surgeon_tmp.cbf
   echo "Done! Waiting for Surgeon to come up..."
   rm -rf surgeon_tmp.cbf
   sleep 20
@@ -63,7 +63,7 @@ restore () {
 	  rootfs="lf1000_rootfs.tar.gz"
 	  memloc="high"
 	  kernel="zImage_tmp.cbf"
-	  python make_cbf.py $memloc ${prefix}zImage $kernel
+	  python make_cbf.py $memloc ${prefix}zImage $kernel || python3 make_cbf.py $memloc ${prefix}zImage $kernel || python2 make_cbf.py $memloc ${prefix}zImage $kernel
   else
 	  rootfs="rootfs.tar.gz"
 	  memloc="superhigh"

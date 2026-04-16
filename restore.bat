@@ -56,8 +56,8 @@ EXIT /B 0
   SET surgeon_path=%~1
   SET memloc=%~2
   echo Booting the Surgeon environment...
-  python make_cbf.py %memloc:"=% %surgeon_path:"=% surgeon_tmp.cbf || make_cbf.exe %memloc:"=% %surgeon_path:"=% surgeon_tmp.cbf
-  python boot_surgeon.py surgeon_tmp.cbf || boot_surgeon.exe surgeon_tmp.cbf
+  python make_cbf.py %memloc:"=% %surgeon_path:"=% surgeon_tmp.cbf || python3 make_cbf.py %memloc:"=% %surgeon_path:"=% surgeon_tmp.cbf || python2 make_cbf.py %memloc:"=% %surgeon_path:"=% surgeon_tmp.cbf || make_cbf.exe %memloc:"=% %surgeon_path:"=% surgeon_tmp.cbf
+  python boot_surgeon.py surgeon_tmp.cbf || python3 boot_surgeon.py surgeon_tmp.cbf || python2 boot_surgeon.py surgeon_tmp.cbf || boot_surgeon.exe surgeon_tmp.cbf
   echo Done! Waiting for Surgeon to come up...
   DEL /F surgeon_tmp.cbf
   TIMEOUT /NOBREAK /T 20
@@ -100,8 +100,7 @@ EXIT /B 0
     set kernel="%prefix:"=%uImage"
   )
   if /I %prefix:"=% == lf1000_ (
-    python make_cbf.py %memloc:"=% %prefix:"=%zImage %kernel:"=% || ^
-    make_cbf.exe %memloc:"=% %prefix:"=%zImage %kernel:"=%
+    python make_cbf.py %memloc:"=% %prefix:"=%zImage %kernel:"=% || python3 make_cbf.py %memloc:"=% %prefix:"=%zImage %kernel:"=% || python2 make_cbf.py %memloc:"=% %prefix:"=%zImage %kernel:"=% || make_cbf.exe %memloc:"=% %prefix:"=%zImage %kernel:"=%
   )
   if /I %prefix:"=% == lf1000_ (
     set rootfs="lf1000_rootfs.tar.gz"

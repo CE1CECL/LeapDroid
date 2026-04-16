@@ -1,10 +1,12 @@
 # LeapDroid
 
+- Android on LeapFrog Devices
+
 To Install LeapDroid:
 
 - On Linux (Run As `root`, assumed Debian/Ubuntu):
 ```
-sudo apt install --no-install-suggests --no-install-recommends sg3-utils python3 --yes
+sudo apt install --no-install-suggests --no-install-recommends sg3-utils python --yes
 sudo ./flash.sh
 ```
 
