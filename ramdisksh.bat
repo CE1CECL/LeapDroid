@@ -1,7 +1,6 @@
 @echo off
 
 SET SSH=ssh root@169.254.8.1
-SET RFSVER=2
 
 call :show_warning
 call :show_machinelist

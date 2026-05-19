@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SSH="ssh root@169.254.8.1"
-RFSVER="2"
 
 show_warning () {
   clear
