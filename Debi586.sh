@@ -1,0 +1,43 @@
+clear
+set -x -e
+rm -rfv Debi586.tar.gz
+rm -rfv Debi586
+apt --yes --force-yes install --no-install-suggests --no-install-recommends debootstrap coreutils tar qemu-user-static binfmt-support
+debootstrap --verbose --arch=i386 --variant=minbase --no-check-gpg --log-extra-deps --no-check-certificate jessie Debi586 http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/
+cp -rfv "$0" Debi586/usr/src/Debi586.sh
+chroot Debi586 /bin/rm -rfv /etc/apt/preferences
+chroot Debi586 /bin/echo "Package: *" | chroot Debi586 /usr/bin/tee /etc/apt/preferences
+chroot Debi586 /bin/echo "Pin: release o=*,a=*,n=*,l=*,c=*,b=*" | chroot Debi586 /usr/bin/tee -a /etc/apt/preferences
+chroot Debi586 /bin/echo "Pin-Priority: 1001" | chroot Debi586 /usr/bin/tee -a /etc/apt/preferences
+chroot Debi586 /bin/rm -rfv /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie main contrib non-free" | chroot Debi586 /usr/bin/tee /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports-sloppy main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports-sloppy main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ jessie/updates main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ jessie/updates main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/rm -rfv /etc/hostname
+chroot Debi586 /bin/echo "" | chroot Debi586 /usr/bin/tee /etc/hostname
+chroot Debi586 /usr/bin/apt-get --yes --force-yes update --allow-unauthenticated
+chroot Debi586 /usr/bin/apt-get --yes --force-yes dist-upgrade --no-install-suggests --no-install-recommends
+chroot Debi586 /usr/bin/yes "1" | chroot Debi586 /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager-gnome wpasupplicant firefox-esr linux-image-586 linux-headers-586
+chroot Debi586 /usr/bin/apt-get --yes --force-yes autoremove
+chroot Debi586 /usr/bin/apt-get --yes --force-yes clean
+chroot Debi586 /usr/bin/apt-get --yes --force-yes autoclean
+chroot Debi586 /bin/rm -rfv /etc/sudoers
+chroot Debi586 /bin/echo "Defaults secure_path='/bin/:/sbin/:/usr/bin/:/usr/sbin/:/usr/local/bin/:/usr/local/sbin/'" | chroot Debi586 /usr/bin/tee /etc/sudoers
+chroot Debi586 /bin/echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" | chroot Debi586 /usr/bin/tee -a /etc/sudoers
+chroot Debi586 /bin/sed -i 's/minimum-uid=500/minimum-uid=0/g' /etc/lightdm/users.conf
+chroot Debi586 /bin/sed -i 's/hidden-users=nobody nobody4 noaccess/hidden-users=/g' /etc/lightdm/users.conf
+chroot Debi586 /bin/sed -i 's/hidden-shells=\/bin\/false \/usr\/sbin\/nologin \/sbin\/nologin/hidden-shells=/g' /etc/lightdm/users.conf
+chroot Debi586 /bin/sed -i 's/#keyboard=/keyboard=xvkbd/g' /etc/lightdm/lightdm-gtk-greeter.conf
+chroot Debi586 /bin/sed -i 's/#autologin-user=/autologin-user=toor/g' /etc/lightdm/lightdm.conf
+chroot Debi586 /bin/ln -sfv /sbin/init /init
+chroot Debi586 /usr/sbin/useradd -m toor
+chroot Debi586 /bin/sed -i 's/::\/root:\/bin\/sh/::\/root:\/bin\/bash/g' /etc/passwd
+chroot Debi586 /bin/sed -i 's/::\/home\/toor:\/bin\/sh/::\/home\/toor:\/bin\/bash/g' /etc/passwd
+chroot Debi586 /bin/echo "root:root" | chroot Debi586 /usr/sbin/chpasswd
+chroot Debi586 /bin/echo "toor:toor" | chroot Debi586 /usr/sbin/chpasswd
+tar --acls --selinux --xattrs -C Debi586 -zcvf Debi586.tar.gz ./

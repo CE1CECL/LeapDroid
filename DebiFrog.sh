@@ -2,38 +2,35 @@ clear
 set -x -e
 rm -rfv DebiFrog.tar.gz
 rm -rfv DebiFrog
-apt --yes --force-yes install --no-install-suggests --no-install-recommends debootstrap coreutils tar qemu-user-static
-debootstrap --verbose --arch=armel --variant=minbase --no-check-gpg --log-extra-deps --no-check-certificate buster DebiFrog http://snapshot.debian.org/archive/debian/20220802T105840Z/
+apt --yes --force-yes install --no-install-suggests --no-install-recommends debootstrap coreutils tar qemu-user-static binfmt-support
+debootstrap --verbose --arch=armel --variant=minbase --no-check-gpg --log-extra-deps --no-check-certificate stretch DebiFrog http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/
+cp -rfv "$0" DebiFrog/usr/src/DebiFrog.sh
 chroot DebiFrog /bin/rm -rfv /etc/apt/preferences
 chroot DebiFrog /bin/echo "Package: *" | chroot DebiFrog /usr/bin/tee /etc/apt/preferences
 chroot DebiFrog /bin/echo "Pin: release o=*,a=*,n=*,l=*,c=*,b=*" | chroot DebiFrog /usr/bin/tee -a /etc/apt/preferences
 chroot DebiFrog /bin/echo "Pin-Priority: 1001" | chroot DebiFrog /usr/bin/tee -a /etc/apt/preferences
 chroot DebiFrog /bin/rm -rfv /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster main contrib non-free" | chroot DebiFrog /usr/bin/tee /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20220802T105840Z/ buster-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-backports-sloppy-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-backports-sloppy-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-proposed-updates-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20220802T105840Z/ buster-proposed-updates-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20220802T105840Z/ buster/updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20220802T105840Z/ buster/updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch main contrib non-free" | chroot DebiFrog /usr/bin/tee /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-sloppy-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-sloppy-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ stretch/updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ stretch/updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
 chroot DebiFrog /bin/rm -rfv /etc/hostname
 chroot DebiFrog /bin/echo "" | chroot DebiFrog /usr/bin/tee /etc/hostname
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes update --allow-unauthenticated --allow-insecure-repositories
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes dist-upgrade --no-install-suggests --no-install-recommends
-chroot DebiFrog /usr/bin/yes "1" | chroot DebiFrog /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager
+chroot DebiFrog /usr/bin/yes "1" | chroot DebiFrog /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager-gnome wpasupplicant firefox-esr
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes autoremove
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes clean
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes autoclean
