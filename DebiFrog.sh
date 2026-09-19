@@ -10,27 +10,27 @@ chroot DebiFrog /bin/echo "Package: *" | chroot DebiFrog /usr/bin/tee /etc/apt/p
 chroot DebiFrog /bin/echo "Pin: release o=*,a=*,n=*,l=*,c=*,b=*" | chroot DebiFrog /usr/bin/tee -a /etc/apt/preferences
 chroot DebiFrog /bin/echo "Pin-Priority: 1001" | chroot DebiFrog /usr/bin/tee -a /etc/apt/preferences
 chroot DebiFrog /bin/rm -rfv /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch main contrib non-free" | chroot DebiFrog /usr/bin/tee /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee /etc/apt/sources.list
 chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-sloppy-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-sloppy-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
 chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
-chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
 chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ stretch/updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-backports-sloppy-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-debug/ stretch-debug main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
 chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ stretch/updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-backports-sloppy main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
+chroot DebiFrog /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ stretch-proposed-updates main contrib non-free" | chroot DebiFrog /usr/bin/tee -a /etc/apt/sources.list
 chroot DebiFrog /bin/rm -rfv /etc/hostname
 chroot DebiFrog /bin/echo "" | chroot DebiFrog /usr/bin/tee /etc/hostname
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes update --allow-unauthenticated --allow-insecure-repositories
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes dist-upgrade --no-install-suggests --no-install-recommends
-chroot DebiFrog /usr/bin/yes "1" | chroot DebiFrog /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager-gnome wpasupplicant firefox-esr
+chroot DebiFrog /usr/bin/yes "1" | chroot DebiFrog /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd onboard isc-dhcp-client kmod network-manager-gnome wpasupplicant firefox-esr
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes autoremove
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes clean
 chroot DebiFrog /usr/bin/apt-get --yes --force-yes autoclean

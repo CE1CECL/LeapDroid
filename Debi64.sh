@@ -10,35 +10,36 @@ chroot Debi64 /bin/echo "Package: *" | chroot Debi64 /usr/bin/tee /etc/apt/prefe
 chroot Debi64 /bin/echo "Pin: release o=*,a=*,n=*,l=*,c=*,b=*" | chroot Debi64 /usr/bin/tee -a /etc/apt/preferences
 chroot Debi64 /bin/echo "Pin-Priority: 1001" | chroot Debi64 /usr/bin/tee -a /etc/apt/preferences
 chroot Debi64 /bin/rm -rfv /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ trixie-backports-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ rc-buggy-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ sid-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ trixie-backports-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ trixie-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ trixie-proposed-updates-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ rc-buggy-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ sid-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20250728T145310Z/ trixie-security main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ experimental main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ sid main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie-backports main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie-proposed-updates main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie-updates main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ experimental main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ sid main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ rc-buggy-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ sid-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ trixie-backports-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ trixie-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ trixie-proposed-updates-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ rc-buggy-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-debug/20250728T143850Z/ sid-debug main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20250728T145310Z/ trixie-security main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ experimental main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ sid main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie-backports main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie-proposed-updates main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ trixie-updates main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ experimental main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi64 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/20250728T143703Z/ sid main contrib non-free non-free-firmware" | chroot Debi64 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi64 /bin/rm -rfv /etc/hostname
 chroot Debi64 /bin/echo "" | chroot Debi64 /usr/bin/tee /etc/hostname
+chroot Debi64 /usr/bin/dpkg --add-architecture i386
 chroot Debi64 /usr/bin/apt-get --yes --force-yes update --allow-unauthenticated --allow-insecure-repositories
 chroot Debi64 /usr/bin/apt-get --yes --force-yes dist-upgrade --no-install-suggests --no-install-recommends
-chroot Debi64 /usr/bin/yes "1" | chroot Debi64 /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager-gnome wpasupplicant firefox-esr linux-image-amd64 linux-headers-amd64
+chroot Debi64 /usr/bin/yes "1" | chroot Debi64 /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd onboard isc-dhcp-client kmod network-manager-gnome wpasupplicant firefox-esr linux-image-amd64 linux-headers-amd64
 chroot Debi64 /usr/bin/apt-get --yes --force-yes autoremove
 chroot Debi64 /usr/bin/apt-get --yes --force-yes clean
 chroot Debi64 /usr/bin/apt-get --yes --force-yes autoclean

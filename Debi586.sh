@@ -10,19 +10,19 @@ chroot Debi586 /bin/echo "Package: *" | chroot Debi586 /usr/bin/tee /etc/apt/pre
 chroot Debi586 /bin/echo "Pin: release o=*,a=*,n=*,l=*,c=*,b=*" | chroot Debi586 /usr/bin/tee -a /etc/apt/preferences
 chroot Debi586 /bin/echo "Pin-Priority: 1001" | chroot Debi586 /usr/bin/tee -a /etc/apt/preferences
 chroot Debi586 /bin/rm -rfv /etc/apt/sources.list
-chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie main contrib non-free" | chroot Debi586 /usr/bin/tee /etc/apt/sources.list
-chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ jessie/updates main contrib non-free" | chroot Debi586 /usr/bin/tee /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports-sloppy main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports-sloppy main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
-chroot Debi586 /bin/echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ jessie/updates main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian-security/ jessie/updates main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
+chroot Debi586 /bin/echo "deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-archive/20240331T102506Z/debian/ jessie-backports-sloppy main contrib non-free" | chroot Debi586 /usr/bin/tee -a /etc/apt/sources.list
 chroot Debi586 /bin/rm -rfv /etc/hostname
 chroot Debi586 /bin/echo "" | chroot Debi586 /usr/bin/tee /etc/hostname
 chroot Debi586 /usr/bin/apt-get --yes --force-yes update --allow-unauthenticated
 chroot Debi586 /usr/bin/apt-get --yes --force-yes dist-upgrade --no-install-suggests --no-install-recommends
-chroot Debi586 /usr/bin/yes "1" | chroot Debi586 /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager-gnome wpasupplicant firefox-esr linux-image-586 linux-headers-586
+chroot Debi586 /usr/bin/yes "1" | chroot Debi586 /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd isc-dhcp-client kmod network-manager-gnome wpasupplicant firefox-esr linux-image-586 linux-headers-586
 chroot Debi586 /usr/bin/apt-get --yes --force-yes autoremove
 chroot Debi586 /usr/bin/apt-get --yes --force-yes clean
 chroot Debi586 /usr/bin/apt-get --yes --force-yes autoclean

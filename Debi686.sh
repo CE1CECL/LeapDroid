@@ -38,7 +38,7 @@ chroot Debi686 /bin/rm -rfv /etc/hostname
 chroot Debi686 /bin/echo "" | chroot Debi686 /usr/bin/tee /etc/hostname
 chroot Debi686 /usr/bin/apt-get --yes --force-yes update --allow-unauthenticated --allow-insecure-repositories
 chroot Debi686 /usr/bin/apt-get --yes --force-yes dist-upgrade --no-install-suggests --no-install-recommends
-chroot Debi686 /usr/bin/yes "1" | chroot Debi686 /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd kmod network-manager-gnome wpasupplicant firefox-esr linux-image-686 linux-headers-686
+chroot Debi686 /usr/bin/yes "1" | chroot Debi686 /usr/bin/apt-get --yes --force-yes install --no-install-suggests --no-install-recommends task-lxde-desktop nano sudo xvkbd onboard isc-dhcp-client kmod network-manager-gnome wpasupplicant firefox-esr linux-image-686 linux-headers-686
 chroot Debi686 /usr/bin/apt-get --yes --force-yes autoremove
 chroot Debi686 /usr/bin/apt-get --yes --force-yes clean
 chroot Debi686 /usr/bin/apt-get --yes --force-yes autoclean
